@@ -8,10 +8,16 @@ interface Step {
   description: string;
 }
 
-export default function Process() {
+interface ProcessProps {
+  data?: {
+    steps: Step[];
+  };
+}
+
+export default function Process({ data }: ProcessProps) {
   const [activeStep, setActiveStep] = useState<string>("01");
 
-  const steps: Step[] = [
+  const defaultSteps: Step[] = [
     {
       id: "01",
       title: "Brief",
@@ -33,6 +39,8 @@ export default function Process() {
       description: "Ship it, measure it, keep it running.",
     },
   ];
+
+  const steps = data?.steps || defaultSteps;
 
   return (
     <section className="w-full py-16 md:py-24 px-6 md:px-12 bg-background border-b border-neutral-200/60">

@@ -13,10 +13,16 @@ interface Pillar {
   badge: string;
 }
 
-export default function Capabilities() {
+interface CapabilitiesProps {
+  data?: {
+    pillars: Record<PillarKey, Pillar>;
+  };
+}
+
+export default function Capabilities({ data }: CapabilitiesProps) {
   const [activePillar, setActivePillar] = useState<PillarKey>("digital");
 
-  const pillars: Record<PillarKey, Pillar> = {
+  const defaultPillars: Record<PillarKey, Pillar> = {
     digital: {
       id: "01",
       label: "LEADING",
@@ -51,10 +57,11 @@ export default function Capabilities() {
     },
   };
 
-  const active = pillars[activePillar];
+  const pillars = data?.pillars || defaultPillars;
+  const active = pillars[activePillar] || defaultPillars[activePillar];
 
   return (
-    <section className="w-full py-20 px-6 md:px-12 bg-background">
+    <section id="capabilities" className="w-full py-20 px-6 md:px-12 bg-background scroll-mt-24">
       <div className="max-w-[1400px] mx-auto">
         
         {/* Section Header */}

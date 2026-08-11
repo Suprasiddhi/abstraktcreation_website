@@ -328,7 +328,7 @@ export default function AdminPage() {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              {!isEditing ? (
+              {!isEditing && (
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditing(true)}
@@ -336,27 +336,6 @@ export default function AdminPage() {
                 >
                   Edit Section
                 </Button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => {
-                      setContent(JSON.parse(JSON.stringify(backupContent)));
-                      setIsEditing(false);
-                      setSaveStatus({ message: "", type: "" });
-                    }}
-                    className="text-[13px] font-semibold text-neutral-400 hover:text-neutral-750 transition-colors uppercase py-2 px-4 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <Button
-                    variant="primary"
-                    disabled={isSaving}
-                    onClick={() => saveSectionContent(activeTab)}
-                    className="py-[9px] px-5 font-bold text-[13px]"
-                  >
-                    {isSaving ? "Saving..." : "Save Changes"}
-                  </Button>
-                </>
               )}
             </div>
           </div>

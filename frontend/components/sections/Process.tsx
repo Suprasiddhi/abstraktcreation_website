@@ -17,30 +17,7 @@ interface ProcessProps {
 export default function Process({ data }: ProcessProps) {
   const [activeStep, setActiveStep] = useState<string>("01");
 
-  const defaultSteps: Step[] = [
-    {
-      id: "01",
-      title: "Brief",
-      description: "A call, a scope, a number. No proposal theatre.",
-    },
-    {
-      id: "02",
-      title: "Plan",
-      description: "Structure, references and a budget you sign off.",
-    },
-    {
-      id: "03",
-      title: "Make",
-      description: "Design, build, shoot, edit. One team, in house.",
-    },
-    {
-      id: "04",
-      title: "Launch",
-      description: "Ship it, measure it, keep it running.",
-    },
-  ];
-
-  const steps = data?.steps || defaultSteps;
+  const steps = data?.steps || [];
 
   return (
     <section className="w-full py-16 md:py-24 px-6 md:px-12 bg-background border-b border-neutral-200/60">

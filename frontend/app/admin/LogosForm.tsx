@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 
 interface Logo {
   id?: number;
   name: string;
-  iconType: string;
+  imageUrl: string;
 }
 
 interface LogosFormProps {
@@ -14,19 +14,9 @@ interface LogosFormProps {
   disabled?: boolean;
 }
 
-const PRESET_ICONS = [
-  { value: "flag", label: "Flag (Vertex style)" },
-  { value: "pulse", label: "Pulse/Polyline (Kinetic style)" },
-  { value: "triangle", label: "Triangle (Apex style)" },
-  { value: "hexagon", label: "Hexagon (Spectrum style)" },
-  { value: "cosmos", label: "Cosmos Ellipses (Cosmos style)" },
-  { value: "quantum", label: "Quantum Cross (Quantum style)" },
-  { value: "nexus", label: "Nexus Circle (Nexus style)" },
-  { value: "elevate", label: "Chevron Up (Elevate style)" },
-  { value: "star", label: "Star (Default style)" },
-];
-
 export default function LogosForm({ data = [], onChange, disabled = false }: LogosFormProps) {
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const updateLogoField = (index: number, field: string, value: any) => {
     const list = [...data];
     list[index] = { ...list[index], [field]: value };
@@ -37,7 +27,7 @@ export default function LogosForm({ data = [], onChange, disabled = false }: Log
     const list = [...data];
     list.push({
       name: "NEWBRAND",
-      iconType: "star",
+      imageUrl: "",
     });
     onChange(list);
   };
@@ -45,6 +35,32 @@ export default function LogosForm({ data = [], onChange, disabled = false }: Log
   const removeLogo = (index: number) => {
     const list = data.filter((_, i) => i !== index);
     onChange(list);
+  };
+
+  const handleFile = (index: number, file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    // Limit to 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image too large. Please use an image under 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateLogoField(index, "imageUrl", reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(index, file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
@@ -71,13 +87,14 @@ export default function LogosForm({ data = [], onChange, disabled = false }: Log
               <button
                 type="button"
                 onClick={() => removeLogo(index)}
-                className="absolute top-4 right-4 text-xs font-bold text-neutral-450 hover:text-red-500 transition-colors uppercase cursor-pointer"
+                className="absolute top-4 right-4 text-xs font-bold text-neutral-400 hover:text-red-500 transition-colors uppercase cursor-pointer z-10"
               >
                 ✕ Remove
               </button>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name Input */}
               <div>
                 <label className="block text-[10px] font-mono font-bold text-neutral-500 mb-1">Logo Text / Brand Name</label>
                 <input
@@ -85,29 +102,64 @@ export default function LogosForm({ data = [], onChange, disabled = false }: Log
                   disabled={disabled}
                   value={logo.name}
                   onChange={(e) => updateLogoField(index, "name", e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand font-bold uppercase disabled:bg-neutral-50 disabled:text-neutral-450"
+                  className="w-full px-3 py-2 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand font-bold uppercase disabled:bg-neutral-50 disabled:text-neutral-400"
                 />
               </div>
+
+              {/* Drag & Drop Image Upload */}
               <div>
-                <label className="block text-[10px] font-mono font-bold text-neutral-500 mb-1">Icon Shape Preset</label>
-                <select
-                  disabled={disabled}
-                  value={logo.iconType}
-                  onChange={(e) => updateLogoField(index, "iconType", e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white disabled:bg-neutral-50 disabled:text-neutral-450 cursor-pointer"
-                >
-                  {PRESET_ICONS.map((preset) => (
-                    <option key={preset.value} value={preset.value}>
-                      {preset.label}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-[10px] font-mono font-bold text-neutral-500 mb-1">Logo Image</label>
+                {logo.imageUrl ? (
+                  <div className="relative rounded-lg border border-neutral-200 bg-white p-3 flex items-center gap-3">
+                    <img
+                      src={logo.imageUrl}
+                      alt={logo.name}
+                      className="h-10 w-auto max-w-[120px] object-contain"
+                    />
+                    {!disabled && (
+                      <button
+                        type="button"
+                        onClick={() => updateLogoField(index, "imageUrl", "")}
+                        className="text-[10px] font-bold text-neutral-400 hover:text-red-500 transition-colors uppercase cursor-pointer ml-auto"
+                      >
+                        Remove Image
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    onDrop={(e) => !disabled && handleDrop(index, e)}
+                    onDragOver={handleDragOver}
+                    onClick={() => !disabled && fileInputRefs.current[index]?.click()}
+                    className={`rounded-lg border-2 border-dashed border-neutral-300 bg-white/50 flex flex-col items-center justify-center py-4 px-3 text-center transition-colors ${
+                      disabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:border-brand/40 hover:bg-brand/5 cursor-pointer"
+                    }`}
+                  >
+                    <svg className="w-6 h-6 text-neutral-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <span className="text-[11px] text-neutral-400 font-semibold">Drop image here or click to browse</span>
+                    <span className="text-[9px] text-neutral-400 mt-0.5">PNG, SVG, JPG — max 2MB</span>
+                    <input
+                      ref={(el) => { fileInputRefs.current[index] = el; }}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFile(index, file);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
         {data.length === 0 && (
-          <p className="text-sm text-neutral-500 font-mono italic text-center py-6">No custom logos created. Click "+ Add Logo" to define one.</p>
+          <p className="text-sm text-neutral-400 font-mono italic text-center py-6">No logos defined. Click &quot;+ Add Logo&quot; to create one.</p>
         )}
       </div>
     </div>

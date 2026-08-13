@@ -41,8 +41,8 @@ export default function Hero({ data }: HeroProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const mainHeadline = data?.headlineLine1 || data?.headlineLines?.[0] || "DESIGN.";
-  const subHeadlineLines = data?.subHeadlineLines || data?.headlineLines?.slice(1) || ["BUILD.", "GROW."];
+  const mainHeadline = data?.headlineLine1 || data?.headlineLines?.[0] || "";
+  const subHeadlineLines = data?.subHeadlineLines || data?.headlineLines?.slice(1) || [];
 
   const [currentSubIndex, setCurrentSubIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -113,7 +113,7 @@ export default function Hero({ data }: HeroProps) {
 
           {/* Paragraph Description */}
           <p className="text-lg md:text-xl text-neutral-600 max-w-lg mb-10 leading-relaxed">
-            {data?.description || "From web solutions and digital marketing to video, music, 3D and graphic design."}
+            {data?.description || ""}
           </p>
 
           {/* Action Row */}

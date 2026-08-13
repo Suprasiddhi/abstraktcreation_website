@@ -15,40 +15,6 @@ interface PeopleProps {
 }
 
 export default function People({ data }: PeopleProps) {
-  // Pre-configured custom SVG avatars for the founding team
-  const defaultAvatars: Record<string, React.ReactNode> = {
-    "AABHISKAR KC": (
-      <svg className="w-20 h-20 text-neutral-400 group-hover:text-brand transition-colors duration-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <circle cx="50" cy="40" r="18" />
-        <path d="M22 82c0-15.46 12.54-28 28-28s28 12.54 28 28" strokeLinecap="round" />
-        <path d="M41 40h18M41 38h4v4h-4zm13 0h4v4h-4zm-9 2c0-2.5 1-4.5 3.5-4.5M54 37.5c2.5 0 3.5 2 3.5 4.5" strokeWidth="1.5" className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </svg>
-    ),
-    "YASHMINE GURUNG": (
-      <svg className="w-20 h-20 text-neutral-400 group-hover:text-brand transition-colors duration-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <circle cx="50" cy="40" r="18" />
-        <path d="M22 82c0-15.46 12.54-28 28-28s28 12.54 28 28" strokeLinecap="round" />
-        <path d="M42 22l8 6 8-6 3 11H39z" fill="currentColor" fillOpacity="0.1" className="opacity-0 group-hover:opacity-100 transition-all duration-300" />
-      </svg>
-    ),
-    "NISIKA SHRESTHA": (
-      <svg className="w-20 h-20 text-neutral-400 group-hover:text-brand transition-colors duration-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <circle cx="50" cy="40" r="18" />
-        <path d="M22 82c0-15.46 12.54-28 28-28s28 12.54 28 28" strokeLinecap="round" />
-        <circle cx="30" cy="50" r="3" fill="currentColor" className="opacity-0 group-hover:opacity-100 transition-all duration-300" />
-        <circle cx="70" cy="50" r="3" fill="currentColor" className="opacity-0 group-hover:opacity-100 transition-all duration-300" />
-        <path d="M33 50h34" strokeDasharray="3 3" className="opacity-0 group-hover:opacity-100 transition-all duration-300" />
-      </svg>
-    ),
-    "NIKHIL TULADHAR": (
-      <svg className="w-20 h-20 text-neutral-400 group-hover:text-brand transition-colors duration-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <circle cx="50" cy="40" r="18" />
-        <path d="M22 82c0-15.46 12.54-28 28-28s28 12.54 28 28" strokeLinecap="round" />
-        <path d="M12 45l-5 5 5 5M88 45l5 5-5 5" strokeLinecap="round" className="opacity-0 group-hover:opacity-100 transition-all duration-300" />
-      </svg>
-    )
-  };
-
   const defaultAvatar = (
     <svg className="w-20 h-20 text-neutral-400 group-hover:text-brand transition-colors duration-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
       <circle cx="50" cy="40" r="18" />
@@ -56,15 +22,8 @@ export default function People({ data }: PeopleProps) {
     </svg>
   );
 
-  const defaultTeam: MemberData[] = [
-    { name: "Aabhiskar KC", role: "CEO" },
-    { name: "Yashmine Gurung", role: "Creative Lead" },
-    { name: "Nisika Shrestha", role: "HR" },
-    { name: "Nikhil Tuladhar", role: "IT" }
-  ];
-
-  const team = data?.team || defaultTeam;
-  const extraCount = data?.extraCount !== undefined ? data.extraCount : 6;
+  const team = data?.team || [];
+  const extraCount = data?.extraCount !== undefined ? data.extraCount : 0;
 
   return (
     <section id="studio" className="w-full py-20 px-6 md:px-12 bg-background border-b border-neutral-200/60 scroll-mt-24">
@@ -88,13 +47,12 @@ export default function People({ data }: PeopleProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
           {/* Team Members */}
           {team.map((member, idx) => {
-            const avatar = defaultAvatars[member.name.toUpperCase()] || defaultAvatar;
             return (
               <div key={idx} className="flex flex-col group cursor-pointer">
                 {/* Profile Card Container - 3:4 aspect ratio */}
                 <div className="w-full aspect-[3/4] rounded-2xl bg-card-bg border border-neutral-300/40 flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:shadow-lg hover:scale-[1.02] mb-4">
                   <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-brand/5 transition-all duration-500 pointer-events-none" />
-                  {avatar}
+                  {defaultAvatar}
                   <span className="absolute bottom-4 left-4 text-[9px] font-mono tracking-widest text-neutral-400 select-none pointer-events-none group-hover:text-neutral-500">
                     3:4 • ROSTER
                   </span>

@@ -16,6 +16,7 @@ import ScrollToTop from "../components/ui/ScrollToTop";
 
 export default function Home() {
   const [content, setContent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -27,9 +28,28 @@ export default function Home() {
   useEffect(() => {
     fetch("http://localhost:3001/api/content")
       .then((res) => res.json())
-      .then((data) => setContent(data))
-      .catch((err) => console.error("Failed to load dynamic content from API:", err));
+      .then((data) => {
+        setContent(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load dynamic content from API:", err);
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center selection:bg-brand/20 selection:text-brand">
+        <div className="flex flex-col items-center gap-4">
+          <span className="text-3xl font-black tracking-tight text-foreground animate-pulse font-sans">
+            ABSTRAKT
+          </span>
+          <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-brand/20 selection:text-brand">

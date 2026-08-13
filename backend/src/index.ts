@@ -39,7 +39,7 @@ app.use(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'x-admin-password'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Seeding function
 async function seedDatabase() {
@@ -226,14 +226,14 @@ async function seedDatabase() {
     if (logosCount.length === 0) {
       console.log("Seeding default Logos...");
       const defaultLogos = [
-        { name: "VERTEX", iconType: "flag", sortOrder: 0 },
-        { name: "KINETIC", iconType: "pulse", sortOrder: 1 },
-        { name: "APEX", iconType: "triangle", sortOrder: 2 },
-        { name: "SPECTRUM", iconType: "hexagon", sortOrder: 3 },
-        { name: "COSMOS", iconType: "cosmos", sortOrder: 4 },
-        { name: "QUANTUM", iconType: "quantum", sortOrder: 5 },
-        { name: "NEXUS", iconType: "nexus", sortOrder: 6 },
-        { name: "ELEVATE", iconType: "elevate", sortOrder: 7 }
+        { name: "VERTEX", imageUrl: "", sortOrder: 0 },
+        { name: "KINETIC", imageUrl: "", sortOrder: 1 },
+        { name: "APEX", imageUrl: "", sortOrder: 2 },
+        { name: "SPECTRUM", imageUrl: "", sortOrder: 3 },
+        { name: "COSMOS", imageUrl: "", sortOrder: 4 },
+        { name: "QUANTUM", imageUrl: "", sortOrder: 5 },
+        { name: "NEXUS", imageUrl: "", sortOrder: 6 },
+        { name: "ELEVATE", imageUrl: "", sortOrder: 7 }
       ];
       for (const logo of defaultLogos) {
         await db.insert(logos).values(logo);
@@ -314,10 +314,26 @@ app.get('/api/content', async (req, res) => {
       projects: projectRows
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map(p => ({
-          title: p.title,
-          subtitle: p.subtitle,
-          ratio: p.ratio,
-          category: p.category
+          id: p.id,
+          title: p.title || "",
+          subtitle: p.subtitle || "",
+          serviceType: p.serviceType || "",
+          startDate: p.startDate || "",
+          endDate: p.endDate || "",
+          client: p.client || "",
+          clientType: p.clientType || "brand",
+          ratio: p.ratio || "16:10",
+          category: p.category || "Digital Marketing",
+          logoUrl: p.logoUrl || "",
+          thumbnailUrl: p.thumbnailUrl || "",
+          videoThumbnailUrl: p.videoThumbnailUrl || "",
+          bodySections: (() => {
+            try {
+              return JSON.parse(p.bodySections || "[]");
+            } catch {
+              return [];
+            }
+          })()
         }))
     };
 
@@ -359,7 +375,7 @@ app.get('/api/content', async (req, res) => {
       .map(logo => ({
         id: logo.id,
         name: logo.name,
-        iconType: logo.iconType
+        imageUrl: logo.imageUrl
       }));
 
     res.json({
@@ -539,13 +555,31 @@ app.post('/api/content/:id', async (req, res) => {
     }
     else if (id === 'work') {
       await db.delete(projects);
-      for (let i = 0; i < contentBody.projects.length; i++) {
-        const p = contentBody.projects[i];
+      const projectsList = Array.isArray(contentBody)
+        ? contentBody
+        : Array.isArray(contentBody.projects)
+        ? contentBody.projects
+        : [];
+      for (let i = 0; i < projectsList.length; i++) {
+        const p = projectsList[i];
+        const sectionsStr = typeof p.bodySections === "string"
+          ? p.bodySections
+          : JSON.stringify(p.bodySections || []);
+
         await db.insert(projects).values({
-          title: p.title,
-          subtitle: p.subtitle,
-          ratio: p.ratio,
-          category: p.category,
+          title: p.title || "",
+          subtitle: p.subtitle || "",
+          serviceType: p.serviceType || "",
+          startDate: p.startDate || "",
+          endDate: p.endDate || "",
+          client: p.client || "",
+          clientType: p.clientType || "brand",
+          ratio: p.ratio || "16:10",
+          category: p.category || "Digital Marketing",
+          logoUrl: p.logoUrl || "",
+          thumbnailUrl: p.thumbnailUrl || "",
+          videoThumbnailUrl: p.videoThumbnailUrl || "",
+          bodySections: sectionsStr,
           sortOrder: i
         });
       }
@@ -612,7 +646,7 @@ app.post('/api/content/:id', async (req, res) => {
         const logo = logosList[i];
         await db.insert(logos).values({
           name: logo.name || "",
-          iconType: logo.iconType || "flag",
+          imageUrl: logo.imageUrl || "",
           sortOrder: i
         });
       }

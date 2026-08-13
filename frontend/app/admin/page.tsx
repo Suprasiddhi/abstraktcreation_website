@@ -12,6 +12,7 @@ import FaqForm from "./FaqForm";
 import ProcessForm from "./ProcessForm";
 import PeopleForm from "./PeopleForm";
 import LogosForm from "./LogosForm";
+import ProjectModal from "./ProjectModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
@@ -31,6 +32,9 @@ export default function AdminPage() {
     type: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Add Project Modal state
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -329,7 +333,17 @@ export default function AdminPage() {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              {!isEditing && (
+              {!isEditing && activeTab === "work" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddProjectModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add Project
+                </Button>
+              ) : !isEditing ? (
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditing(true)}
@@ -337,7 +351,7 @@ export default function AdminPage() {
                 >
                   Edit Section
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -369,7 +383,7 @@ export default function AdminPage() {
           )}
 
           {activeTab === "work" && content?.work && (
-            <WorkForm data={content.work} onChange={(newData) => updateSectionData("work", newData)} disabled={!isEditing} />
+            <WorkForm data={content.work} onChange={(newData) => updateSectionData("work", newData)} onStartEditing={() => setIsEditing(true)} disabled={!isEditing} />
           )}
 
           {activeTab === "faq" && content?.faq && (
@@ -414,6 +428,21 @@ export default function AdminPage() {
 
         </section>
       </main>
+      {/* Add Project Modal */}
+      {showAddProjectModal && (
+        <ProjectModal
+          onSave={(newProjData) => {
+            const list = [...(content?.work?.projects || []), newProjData];
+            setContent((prev: any) => ({
+              ...prev,
+              work: { ...prev.work, projects: list },
+            }));
+            setIsEditing(true);
+            setShowAddProjectModal(false);
+          }}
+          onClose={() => setShowAddProjectModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -42,8 +42,17 @@ export const projects = pgTable("projects", {
     id: serial("id").primaryKey(),
     title: varchar("title", { length: 255 }).notNull(),
     subtitle: varchar("subtitle", { length: 255 }).notNull(),
-    ratio: varchar("ratio", { length: 20 }).notNull(),
-    category: varchar("category", { length: 255 }).notNull(),
+    serviceType: varchar("service_type", { length: 255 }).notNull().default(""),
+    startDate: varchar("start_date", { length: 100 }).notNull().default(""),
+    endDate: varchar("end_date", { length: 100 }).notNull().default(""),
+    client: varchar("client", { length: 255 }).notNull().default(""),
+    clientType: varchar("client_type", { length: 50 }).notNull().default("brand"),
+    ratio: varchar("ratio", { length: 20 }).notNull().default("16:10"),
+    category: varchar("category", { length: 255 }).notNull().default("Digital Marketing"),
+    logoUrl: text("logo_url").notNull().default(""),
+    thumbnailUrl: text("thumbnail_url").notNull().default(""),
+    videoThumbnailUrl: text("video_thumbnail_url").notNull().default(""),
+    bodySections: text("body_sections").notNull().default("[]"),
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -97,7 +106,7 @@ export const teamMembers = pgTable("team_members", {
 export const logos = pgTable("logos", {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
-    iconType: varchar("icon_type", { length: 50 }).notNull(), // flag, pulse, triangle, hexagon, cosmos, quantum, nexus, elevate, star
+    imageUrl: text("image_url").notNull().default(""), // base64 data URL of the logo image
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

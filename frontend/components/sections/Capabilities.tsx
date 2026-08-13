@@ -22,43 +22,15 @@ interface CapabilitiesProps {
 export default function Capabilities({ data }: CapabilitiesProps) {
   const [activePillar, setActivePillar] = useState<PillarKey>("digital");
 
-  const defaultPillars: Record<PillarKey, Pillar> = {
-    digital: {
-      id: "01",
-      label: "LEADING",
-      title: "DIGITAL",
-      description: "Web solutions — high-performance engineering and UI/UX systems, in the studio's own words.",
-      tag: "Web Solutions",
-      badge: "LEAD PILLAR — SWAPPABLE SLOT",
-    },
-    identity: {
-      id: "02",
-      label: "SHAPING",
-      title: "IDENTITY",
-      description: "Brand architecture — premium corporate design systems, bespoke typography, and art direction.",
-      tag: "Brand Architecture",
-      badge: "BRAND SYSTEM — SWAPPABLE SLOT",
-    },
-    campaign: {
-      id: "03",
-      label: "ENGAGING",
-      title: "CAMPAIGN",
-      description: "Creative storytelling — digital marketing, conversion funnel optimization, and content strategies.",
-      tag: "Campaign Launch",
-      badge: "MARKETING — SWAPPABLE SLOT",
-    },
-    creative: {
-      id: "04",
-      label: "EXPRESSING",
-      title: "CREATIVE",
-      description: "Multimedia assets — 3D modeling, premium video production, sound design, and motion graphics.",
-      tag: "Motion & 3D",
-      badge: "CREATIVE — SWAPPABLE SLOT",
-    },
+  const pillars = data?.pillars || {} as Record<PillarKey, Pillar>;
+  const active = pillars[activePillar] || {
+    id: "",
+    label: "",
+    title: "",
+    description: "",
+    tag: "",
+    badge: "",
   };
-
-  const pillars = data?.pillars || defaultPillars;
-  const active = pillars[activePillar] || defaultPillars[activePillar];
 
   return (
     <section id="capabilities" className="w-full py-20 px-6 md:px-12 bg-background scroll-mt-24">

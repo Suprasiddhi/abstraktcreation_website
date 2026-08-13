@@ -60,5 +60,16 @@ body {
   animation-play-state: paused;
 }
 
+/* Typewriter animation styling */
+@keyframes blink {
+  from, to { border-color: transparent }
+  50% { border-color: var(--brand) }
+}
+
+.typewriter-cursor {
+  border-right: 4px solid var(--brand);
+  animation: blink 0.75s step-end infinite;
+}
+
 
 

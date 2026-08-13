@@ -6,7 +6,9 @@ import Button from "../ui/Button";
 interface HeroProps {
   data?: {
     location: string;
-    headlineLines: string[];
+    headlineLine1?: string;
+    subHeadlineLines?: string[];
+    headlineLines?: string[];
     description: string;
   };
 }
@@ -39,9 +41,53 @@ export default function Hero({ data }: HeroProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const mainHeadline = data?.headlineLine1 || data?.headlineLines?.[0] || "DESIGN.";
+  const subHeadlineLines = data?.subHeadlineLines || data?.headlineLines?.slice(1) || ["BUILD.", "GROW."];
+
+  const [currentSubIndex, setCurrentSubIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (subHeadlineLines.length === 0) {
+      setDisplayText("");
+      return;
+    }
+
+    const currentFullText = subHeadlineLines[currentSubIndex] || "";
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) {
+      // Typing
+      if (displayText !== currentFullText) {
+        timer = setTimeout(() => {
+          setDisplayText(currentFullText.substring(0, displayText.length + 1));
+        }, 120); // typing speed
+      } else {
+        // Pause before deleting
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2200); // pause duration
+      }
+    } else {
+      // Deleting
+      if (displayText !== "") {
+        timer = setTimeout(() => {
+          setDisplayText(displayText.substring(0, displayText.length - 1));
+        }, 60); // deleting speed
+      } else {
+        // Move to next word
+        setIsDeleting(false);
+        setCurrentSubIndex((prev) => (prev + 1) % subHeadlineLines.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, currentSubIndex, subHeadlineLines]);
+
   return (
-    <section className="w-full py-16 md:py-24 px-6 md:px-12 max-w-[1400px] mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+    <section className="w-full min-h-[calc(100vh-76px)] flex items-center px-6 md:px-12 max-w-[1400px] mx-auto py-12 md:py-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full">
 
         {/* Left Column: Heading, Subheading & CTAs */}
         <div className="lg:col-span-7 flex flex-col justify-start">
@@ -54,12 +100,15 @@ export default function Hero({ data }: HeroProps) {
           </span>
 
           {/* Large Headline */}
-          <h1 className="text-[60px] sm:text-[80px] md:text-[100px] lg:text-[110px] font-black tracking-tight leading-[0.9] text-foreground mb-8 select-none">
-            {(data?.headlineLines || ["DESIGN.", "BUILD.", "GROW."]).map((line: string, i: number) => (
-              <span key={i} className="block hover:text-brand transition-colors duration-300">
-                {line}
+          <h1 className="text-[60px] sm:text-[80px] md:text-[100px] lg:text-[110px] font-black tracking-tight leading-[0.9] text-foreground mb-8 select-none uppercase">
+            <span className="block hover:text-brand transition-colors duration-300">
+              {mainHeadline}
+            </span>
+            <span className="block">
+              <span className="inline-block text-brand typewriter-cursor pr-1 min-h-[0.9em] whitespace-nowrap align-bottom">
+                {displayText || "\u200b"}
               </span>
-            ))}
+            </span>
           </h1>
 
           {/* Paragraph Description */}
@@ -81,8 +130,6 @@ export default function Hero({ data }: HeroProps) {
             </a>
           </div>
         </div>
-
-
 
       </div>
     </section>

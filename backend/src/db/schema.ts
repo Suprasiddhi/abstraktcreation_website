@@ -92,3 +92,12 @@ export const teamMembers = pgTable("team_members", {
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// 10. Logos Table
+export const logos = pgTable("logos", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    iconType: varchar("icon_type", { length: 50 }).notNull(), // flag, pulse, triangle, hexagon, cosmos, quantum, nexus, elevate, star
+    sortOrder: integer("sort_order").notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

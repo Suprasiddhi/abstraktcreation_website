@@ -11,8 +11,9 @@ import WorkForm from "./WorkForm";
 import FaqForm from "./FaqForm";
 import ProcessForm from "./ProcessForm";
 import PeopleForm from "./PeopleForm";
+import LogosForm from "./LogosForm";
 
-type Tab = "hero" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
+type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -279,7 +280,7 @@ export default function AdminPage() {
           <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-neutral-400 uppercase p-2 block border-b border-neutral-100 mb-2">
             SECTIONS LIST
           </span>
-          {(["hero", "position", "capabilities", "work", "faq", "process", "people"] as Tab[]).map((tab) => {
+          {(["hero", "logos", "position", "capabilities", "work", "faq", "process", "people"] as Tab[]).map((tab) => {
             const isActive = activeTab === tab;
             return (
               <button
@@ -296,7 +297,7 @@ export default function AdminPage() {
                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-850"
                 }`}
               >
-                {tab === "position" ? "Statement" : tab === "work" ? "Selected Work" : tab}
+                {tab === "position" ? "Statement" : tab === "work" ? "Selected Work" : tab === "logos" ? "Logos" : tab}
               </button>
             );
           })}
@@ -381,6 +382,10 @@ export default function AdminPage() {
 
           {activeTab === "people" && content?.people && (
             <PeopleForm data={content.people} onChange={(newData) => updateSectionData("people", newData)} disabled={!isEditing} />
+          )}
+
+          {activeTab === "logos" && content?.logos && (
+            <LogosForm data={content.logos} onChange={(newData) => updateSectionData("logos", newData)} disabled={!isEditing} />
           )}
 
           {/* Footer Save Row */}

@@ -39,7 +39,7 @@ export default function Home() {
       {/* Main hero section content */}
       <main className="flex-1 flex flex-col justify-start items-stretch">
         <Hero data={content?.hero} />
-        <LogoMarquee />
+        <LogoMarquee data={content?.logos} />
         <Position data={content?.position} />
         <Capabilities data={content?.capabilities} />
         <SelectedWork data={content?.work} />

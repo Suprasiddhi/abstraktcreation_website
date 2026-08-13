@@ -17,7 +17,8 @@ import {
   faqsItems,
   processSteps,
   peopleMetadata,
-  teamMembers
+  teamMembers,
+  logos
 } from './db/schema';
 
 const app = express();
@@ -56,8 +57,8 @@ async function seedDatabase() {
         id: 1,
         location: "SANEPA, NEPAL — DALLAS, TX",
         headlineLine1: "DESIGN.",
-        headlineLine2: "BUILD.",
-        headlineLine3: "GROW.",
+        headlineLine2: JSON.stringify(["BUILD.", "GROW."]),
+        headlineLine3: "",
         description: "From web solutions and digital marketing to video, music, 3D and graphic design."
       });
     }
@@ -220,6 +221,25 @@ async function seedDatabase() {
       }
     }
 
+    // 10. Seed Logos
+    const logosCount = await db.select().from(logos);
+    if (logosCount.length === 0) {
+      console.log("Seeding default Logos...");
+      const defaultLogos = [
+        { name: "VERTEX", iconType: "flag", sortOrder: 0 },
+        { name: "KINETIC", iconType: "pulse", sortOrder: 1 },
+        { name: "APEX", iconType: "triangle", sortOrder: 2 },
+        { name: "SPECTRUM", iconType: "hexagon", sortOrder: 3 },
+        { name: "COSMOS", iconType: "cosmos", sortOrder: 4 },
+        { name: "QUANTUM", iconType: "quantum", sortOrder: 5 },
+        { name: "NEXUS", iconType: "nexus", sortOrder: 6 },
+        { name: "ELEVATE", iconType: "elevate", sortOrder: 7 }
+      ];
+      for (const logo of defaultLogos) {
+        await db.insert(logos).values(logo);
+      }
+    }
+
     console.log("Database seed verification complete.");
   } catch (error) {
     console.error("Database seed failed. Make sure to run 'pnpm run db:push'.", error);
@@ -238,7 +258,8 @@ app.get('/api/content', async (req, res) => {
       faqItemRows,
       processRows,
       peopleMetaRows,
-      teamRows
+      teamRows,
+      logoRows
     ] = await Promise.all([
       db.select().from(hero),
       db.select().from(position),
@@ -248,13 +269,26 @@ app.get('/api/content', async (req, res) => {
       db.select().from(faqsItems),
       db.select().from(processSteps),
       db.select().from(peopleMetadata),
-      db.select().from(teamMembers)
+      db.select().from(teamMembers),
+      db.select().from(logos)
     ]);
 
     // Format & sort arrays
+    const subHeadlineLines = (() => {
+      try {
+        const val = heroRows[0]?.headlineLine2 || "";
+        if (val.startsWith("[")) {
+          return JSON.parse(val);
+        }
+      } catch (e) {}
+      return [heroRows[0]?.headlineLine2, heroRows[0]?.headlineLine3].filter(Boolean);
+    })();
+
     const formattedHero = heroRows[0] ? {
       location: heroRows[0].location,
-      headlineLines: [heroRows[0].headlineLine1, heroRows[0].headlineLine2, heroRows[0].headlineLine3],
+      headlineLine1: heroRows[0].headlineLine1,
+      subHeadlineLines: subHeadlineLines,
+      headlineLines: [heroRows[0].headlineLine1, ...subHeadlineLines],
       description: heroRows[0].description
     } : undefined;
 
@@ -320,6 +354,14 @@ app.get('/api/content', async (req, res) => {
       extraCount: peopleMetaRows[0].extraCount
     } : undefined;
 
+    const formattedLogos = logoRows
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(logo => ({
+        id: logo.id,
+        name: logo.name,
+        iconType: logo.iconType
+      }));
+
     res.json({
       hero: formattedHero,
       position: formattedPosition,
@@ -327,7 +369,8 @@ app.get('/api/content', async (req, res) => {
       work: formattedWork,
       faq: formattedFaq,
       process: formattedProcess,
-      people: formattedPeople
+      people: formattedPeople,
+      logos: formattedLogos
     });
   } catch (error) {
     console.error("Failed to load site content from database tables:", error);
@@ -362,7 +405,7 @@ app.post('/api/content/clear', async (req, res) => {
       .set({
         location: "",
         headlineLine1: "",
-        headlineLine2: "",
+        headlineLine2: "[]",
         headlineLine3: "",
         description: "",
         updatedAt: new Date()
@@ -425,6 +468,9 @@ app.post('/api/content/clear', async (req, res) => {
     // 9. Delete all Team members
     await db.delete(teamMembers);
 
+    // 10. Delete all Logos
+    await db.delete(logos);
+
     console.log("Database cleared successfully by admin.");
     res.json({ success: true, message: "All content cleared successfully. Ready for manual input." });
   } catch (error: any) {
@@ -451,12 +497,19 @@ app.post('/api/content/:id', async (req, res) => {
 
   try {
     if (id === 'hero') {
+      const headlineLine1 = contentBody.headlineLine1 !== undefined ? contentBody.headlineLine1 : (contentBody.headlineLines?.[0] || "");
+      let headlineLine2 = "[]";
+      if (contentBody.subHeadlineLines) {
+        headlineLine2 = JSON.stringify(contentBody.subHeadlineLines);
+      } else if (contentBody.headlineLines) {
+        headlineLine2 = JSON.stringify(contentBody.headlineLines.slice(1));
+      }
       await db.update(hero)
         .set({
           location: contentBody.location,
-          headlineLine1: contentBody.headlineLines[0] || "",
-          headlineLine2: contentBody.headlineLines[1] || "",
-          headlineLine3: contentBody.headlineLines[2] || "",
+          headlineLine1: headlineLine1,
+          headlineLine2: headlineLine2,
+          headlineLine3: "",
           description: contentBody.description,
           updatedAt: new Date()
         })
@@ -544,6 +597,22 @@ app.post('/api/content/:id', async (req, res) => {
         await db.insert(teamMembers).values({
           name: m.name,
           role: m.role,
+          sortOrder: i
+        });
+      }
+    }
+    else if (id === 'logos') {
+      await db.delete(logos);
+      const logosList = Array.isArray(contentBody)
+        ? contentBody
+        : Array.isArray(contentBody.logos)
+        ? contentBody.logos
+        : [];
+      for (let i = 0; i < logosList.length; i++) {
+        const logo = logosList[i];
+        await db.insert(logos).values({
+          name: logo.name || "",
+          iconType: logo.iconType || "flag",
           sortOrder: i
         });
       }

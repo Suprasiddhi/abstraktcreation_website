@@ -1,4 +1,4 @@
-import { integer, pgTable, varchar, text, timestamp, serial } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, text, timestamp, serial, boolean } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -52,6 +52,7 @@ export const projects = pgTable("projects", {
     logoUrl: text("logo_url").notNull().default(""),
     thumbnailUrl: text("thumbnail_url").notNull().default(""),
     videoThumbnailUrl: text("video_thumbnail_url").notNull().default(""),
+    isBookmarked: boolean("is_bookmarked").notNull().default(false),
     bodySections: text("body_sections").notNull().default("[]"),
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

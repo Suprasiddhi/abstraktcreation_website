@@ -11,6 +11,9 @@ interface ProjectData {
   logoUrl?: string;
   thumbnailUrl?: string;
   videoThumbnailUrl?: string;
+  isBookmarked?: boolean;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface SelectedWorkProps {
@@ -20,7 +23,32 @@ interface SelectedWorkProps {
 }
 
 export default function SelectedWork({ data }: SelectedWorkProps) {
-  const activeProjects = data?.projects || [];
+  const getProjectDateVal = (p: ProjectData) => {
+    const end = (p.endDate || "").trim().toLowerCase();
+    const start = (p.startDate || "").trim().toLowerCase();
+    if (end.includes("present") || end.includes("current") || start.includes("present") || start.includes("current")) {
+      return 999999;
+    }
+    const matches = `${end} ${start}`.match(/\b(19|20)\d{2}\b/g);
+    if (matches && matches.length > 0) {
+      return Math.max(...matches.map((y) => parseInt(y, 10)));
+    }
+    return 0;
+  };
+
+  const activeProjects = [...(data?.projects || [])].sort((a, b) => {
+    const aBM = Boolean(a.isBookmarked);
+    const bBM = Boolean(b.isBookmarked);
+    if (aBM !== bBM) {
+      return aBM ? -1 : 1;
+    }
+    const dateA = getProjectDateVal(a);
+    const dateB = getProjectDateVal(b);
+    if (dateA !== dateB) {
+      return dateB - dateA;
+    }
+    return 0;
+  });
   // Restrict display to a maximum of 5 projects
   const displayProjects = activeProjects.slice(0, 5);
 
@@ -77,6 +105,11 @@ export default function SelectedWork({ data }: SelectedWorkProps) {
               <p className="text-neutral-400 text-xs mt-1 leading-normal line-clamp-2">
                 {project.subtitle}
               </p>
+            )}
+            {(project.startDate || project.endDate) && (
+              <span className="text-[10px] font-mono tracking-widest text-neutral-300 mt-1.5 uppercase font-semibold">
+                Timeline: {project.startDate || "N/A"} {project.endDate ? `— ${project.endDate}` : ""}
+              </span>
             )}
           </div>
 

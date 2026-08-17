@@ -25,6 +25,7 @@ export interface ProjectData {
   logoUrl?: string;
   thumbnailUrl?: string;
   videoThumbnailUrl?: string;
+  isBookmarked?: boolean;
   bodySections: BodySection[];
 }
 
@@ -36,6 +37,7 @@ interface ProjectModalProps {
 
 export default function ProjectModal({ project, onSave, onClose }: ProjectModalProps) {
   const [formData, setFormData] = useState<ProjectData>({
+    id: project?.id,
     title: project?.title || "",
     subtitle: project?.subtitle || "",
     serviceType: project?.serviceType || "",
@@ -47,6 +49,7 @@ export default function ProjectModal({ project, onSave, onClose }: ProjectModalP
     logoUrl: project?.logoUrl || "",
     thumbnailUrl: project?.thumbnailUrl || "",
     videoThumbnailUrl: project?.videoThumbnailUrl || "",
+    isBookmarked: project?.isBookmarked || false,
     bodySections: project?.bodySections || [],
   });
 

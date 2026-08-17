@@ -13,6 +13,7 @@ import ProcessForm from "./ProcessForm";
 import PeopleForm from "./PeopleForm";
 import LogosForm from "./LogosForm";
 import ProjectModal from "./ProjectModal";
+import LogoModal from "./LogoModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
@@ -33,8 +34,9 @@ export default function AdminPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Add Project Modal state
+  // Add Project / Add Logo Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showAddLogoModal, setShowAddLogoModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -125,6 +127,22 @@ export default function AdminPage() {
 
       const responseData = await res.json();
       if (res.ok) {
+        // If saving work section, also save logos table to keep database synchronized
+        if (sectionId === "work" && content.logos) {
+          try {
+            await fetch(`http://localhost:3001/api/content/logos`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-password": savedPassword,
+              },
+              body: JSON.stringify(content.logos),
+            });
+          } catch (e) {
+            console.error("Auto-sync logos save error:", e);
+          }
+        }
+
         setSaveStatus({
           message: `Saved changes to '${sectionId.toUpperCase()}' successfully.`,
           type: "success",
@@ -343,6 +361,16 @@ export default function AdminPage() {
                 >
                   + Add Project
                 </Button>
+              ) : !isEditing && activeTab === "logos" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddLogoModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add Logo
+                </Button>
               ) : !isEditing ? (
                 <Button
                   variant="secondary"
@@ -383,7 +411,19 @@ export default function AdminPage() {
           )}
 
           {activeTab === "work" && content?.work && (
-            <WorkForm data={content.work} onChange={(newData) => updateSectionData("work", newData)} onStartEditing={() => setIsEditing(true)} disabled={!isEditing} />
+            <WorkForm
+              data={content.work}
+              logosData={content.logos || []}
+              onChange={(newData, updatedLogos) => {
+                setContent((prev: any) => ({
+                  ...prev,
+                  work: newData,
+                  logos: updatedLogos !== undefined ? updatedLogos : prev.logos,
+                }));
+              }}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
           )}
 
           {activeTab === "faq" && content?.faq && (
@@ -399,7 +439,7 @@ export default function AdminPage() {
           )}
 
           {activeTab === "logos" && content?.logos && (
-            <LogosForm data={content.logos} onChange={(newData) => updateSectionData("logos", newData)} disabled={!isEditing} />
+            <LogosForm data={content.logos} onChange={(newData) => updateSectionData("logos", newData)} onStartEditing={() => setIsEditing(true)} disabled={!isEditing} />
           )}
 
           {/* Footer Save Row */}
@@ -428,19 +468,49 @@ export default function AdminPage() {
 
         </section>
       </main>
+
       {/* Add Project Modal */}
       {showAddProjectModal && (
         <ProjectModal
           onSave={(newProjData) => {
             const list = [...(content?.work?.projects || []), newProjData];
+            let updatedLogos = [...(content?.logos || [])];
+            if (newProjData.logoUrl) {
+              const brandName = (newProjData.client || newProjData.title || "").trim().toUpperCase();
+              if (brandName) {
+                const existingIdx = updatedLogos.findIndex(l => l.name.toUpperCase() === brandName);
+                if (existingIdx >= 0) {
+                  updatedLogos[existingIdx] = { ...updatedLogos[existingIdx], imageUrl: newProjData.logoUrl };
+                } else {
+                  updatedLogos.push({ name: brandName, imageUrl: newProjData.logoUrl });
+                }
+              }
+            }
             setContent((prev: any) => ({
               ...prev,
               work: { ...prev.work, projects: list },
+              logos: updatedLogos,
             }));
             setIsEditing(true);
             setShowAddProjectModal(false);
           }}
           onClose={() => setShowAddProjectModal(false)}
+        />
+      )}
+
+      {/* Add Logo Modal */}
+      {showAddLogoModal && (
+        <LogoModal
+          onSave={(newLogoData) => {
+            const list = [...(content?.logos || []), newLogoData];
+            setContent((prev: any) => ({
+              ...prev,
+              logos: list,
+            }));
+            setIsEditing(true);
+            setShowAddLogoModal(false);
+          }}
+          onClose={() => setShowAddLogoModal(false)}
         />
       )}
     </div>

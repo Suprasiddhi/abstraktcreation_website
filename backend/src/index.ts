@@ -34,6 +34,17 @@ const poolConfig = {
 const pool = new pg.Pool(poolConfig);
 const db = drizzle({ client: pool });
 
+// Automatically ensure schema columns exist
+async function initDbSchema() {
+  try {
+    await pool.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+    console.log("Database schema migration: successfully ensured is_bookmarked column on projects table.");
+  } catch (err) {
+    console.error("Database schema init warning:", err);
+  }
+}
+initDbSchema();
+
 app.use(cors({
   origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
   methods: ['GET', 'POST'],
@@ -49,6 +60,11 @@ async function seedDatabase() {
   }
   console.log("Checking database content...");
   try {
+    try {
+      await pool.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+    } catch (e) {
+      console.log("Column migration check:", e);
+    }
     // 1. Seed Hero
     const heroCount = await db.select().from(hero);
     if (heroCount.length === 0) {
@@ -310,9 +326,32 @@ app.get('/api/content', async (req, res) => {
       }, {} as Record<string, any>)
     };
 
+    const getProjectDateVal = (p: any) => {
+      const end = (p.endDate || "").trim().toLowerCase();
+      const start = (p.startDate || "").trim().toLowerCase();
+      if (end.includes("present") || end.includes("current") || start.includes("present") || start.includes("current")) {
+        return 999999;
+      }
+      const matches = `${end} ${start}`.match(/\b(19|20)\d{2}\b/g);
+      if (matches && matches.length > 0) {
+        return Math.max(...matches.map(y => parseInt(y, 10)));
+      }
+      return 0;
+    };
+
     const formattedWork = {
       projects: projectRows
-        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .sort((a, b) => {
+          if (Boolean(a.isBookmarked) !== Boolean(b.isBookmarked)) {
+            return a.isBookmarked ? -1 : 1;
+          }
+          const dateA = getProjectDateVal(a);
+          const dateB = getProjectDateVal(b);
+          if (dateA !== dateB) {
+            return dateB - dateA;
+          }
+          return a.sortOrder - b.sortOrder;
+        })
         .map(p => ({
           id: p.id,
           title: p.title || "",
@@ -327,6 +366,7 @@ app.get('/api/content', async (req, res) => {
           logoUrl: p.logoUrl || "",
           thumbnailUrl: p.thumbnailUrl || "",
           videoThumbnailUrl: p.videoThumbnailUrl || "",
+          isBookmarked: Boolean(p.isBookmarked),
           bodySections: (() => {
             try {
               return JSON.parse(p.bodySections || "[]");
@@ -554,6 +594,11 @@ app.post('/api/content/:id', async (req, res) => {
       }
     }
     else if (id === 'work') {
+      try {
+        await pool.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+      } catch (e) {
+        console.error("Column check error on work save:", e);
+      }
       await db.delete(projects);
       const projectsList = Array.isArray(contentBody)
         ? contentBody
@@ -579,6 +624,7 @@ app.post('/api/content/:id', async (req, res) => {
           logoUrl: p.logoUrl || "",
           thumbnailUrl: p.thumbnailUrl || "",
           videoThumbnailUrl: p.videoThumbnailUrl || "",
+          isBookmarked: Boolean(p.isBookmarked),
           bodySections: sectionsStr,
           sortOrder: i
         });

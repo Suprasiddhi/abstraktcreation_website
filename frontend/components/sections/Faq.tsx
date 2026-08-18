@@ -21,14 +21,7 @@ export default function Faq({ data }: FaqProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const faqData = data || {
-    badge: "",
-    title: "",
-    description: "",
-    buttonText: "",
-    questions: [],
-  };
-  const questions = faqData.questions || [];
+  const questions = data?.questions || (Array.isArray(data) ? (data as FaqItem[]) : []);
 
   const toggleAccordion = (index: number) => {
     if (openIndex === index) {
@@ -45,11 +38,7 @@ export default function Faq({ data }: FaqProps) {
       return (
         <>
           {parts[0]}
-          <span className="relative inline-block">
-            Q
-            <span className="absolute -top-1 md:-top-2 left-[40%] w-[6px] h-[6px] md:w-[8px] md:h-[8px] bg-white rounded-full" />
-          </span>
-          UESTIONS
+          QUESTIONS
           {parts[1]}
         </>
       );
@@ -61,25 +50,19 @@ export default function Faq({ data }: FaqProps) {
     <section className="w-full bg-black text-white py-24 px-6 md:px-12 border-b border-neutral-800 scroll-mt-24">
       <div className="max-w-[1400px] mx-auto flex flex-col items-center text-center">
         {/* Blue Badge */}
-        {faqData.badge && (
-          <span className="text-[11px] md:text-xs font-bold tracking-[0.25em] text-brand mb-6 block uppercase">
-            {faqData.badge}
-          </span>
-        )}
+        <span className="text-[11px] md:text-xs font-bold tracking-[0.25em] text-brand mb-6 block uppercase">
+          GOT QUESTIONS?
+        </span>
 
         {/* Big Bold Title */}
-        {faqData.title && (
-          <h2 className="text-[34px] sm:text-[48px] md:text-[68px] lg:text-[76px] font-black tracking-tight leading-[1.0] text-white uppercase max-w-5xl mb-6 select-none">
-            {renderTitle(faqData.title)}
-          </h2>
-        )}
+        <h2 className="text-[34px] sm:text-[48px] md:text-[68px] lg:text-[76px] font-black tracking-tight leading-[1.0] text-white uppercase max-w-5xl mb-6 select-none">
+          {renderTitle("FREQUENTLY ASKED QUESTIONS")}
+        </h2>
 
         {/* Description */}
-        {faqData.description && (
-          <p className="text-neutral-400 text-sm sm:text-base md:text-lg mb-10 max-w-3xl leading-relaxed">
-            {faqData.description}
-          </p>
-        )}
+        <p className="text-neutral-400 text-sm sm:text-base md:text-lg mb-10 max-w-3xl leading-relaxed">
+          Find answers to the most common questions about Abstrakt Creation and our comprehensive digital, creative, and branding services.
+        </p>
 
         {/* VIEW ALL FAQS Button */}
         {questions.length > 0 && (
@@ -90,17 +73,16 @@ export default function Faq({ data }: FaqProps) {
             }}
             className="border border-neutral-800 hover:border-brand bg-neutral-950/50 hover:bg-brand/10 text-white font-semibold text-[13px] tracking-wider py-[14px] px-8 rounded-full transition-all duration-300 uppercase cursor-pointer flex items-center gap-2 select-none"
           >
-            {isExpanded ? "CLOSE FAQS -" : (faqData.buttonText || "VIEW ALL FAQS +")}
+            {isExpanded ? "CLOSE FAQS -" : "VIEW ALL FAQS +"}
           </button>
         )}
 
         {/* Expandable Accordion List */}
         <div
-          className={`w-full max-w-4xl mx-auto transition-all duration-700 ease-in-out overflow-hidden ${
-            isExpanded
+          className={`w-full max-w-4xl mx-auto transition-all duration-700 ease-in-out overflow-hidden ${isExpanded
               ? "max-h-[1000px] mt-16 opacity-100"
               : "max-h-0 opacity-0 pointer-events-none"
-          }`}
+            }`}
         >
           <div className="flex flex-col text-left border-t border-neutral-800/80">
             {questions.map((faq, index) => {
@@ -128,9 +110,8 @@ export default function Faq({ data }: FaqProps) {
                   </button>
 
                   <div
-                    className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                      isOpen ? "max-h-[300px] mt-4 opacity-100" : "max-h-0 opacity-0"
-                    }`}
+                    className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? "max-h-[300px] mt-4 opacity-100" : "max-h-0 opacity-0"
+                      }`}
                   >
                     <p className="text-sm sm:text-base text-neutral-400 leading-relaxed max-w-3xl">
                       {faq.answer}

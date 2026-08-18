@@ -14,6 +14,7 @@ import PeopleForm from "./PeopleForm";
 import LogosForm from "./LogosForm";
 import ProjectModal from "./ProjectModal";
 import LogoModal from "./LogoModal";
+import FaqModal from "./FaqModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
@@ -34,9 +35,10 @@ export default function AdminPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Add Project / Add Logo Modal state
+  // Add Project / Add Logo / Add FAQ Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddLogoModal, setShowAddLogoModal] = useState(false);
+  const [showAddFaqModal, setShowAddFaqModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -371,6 +373,16 @@ export default function AdminPage() {
                 >
                   + Add Logo
                 </Button>
+              ) : !isEditing && activeTab === "faq" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddFaqModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add QUE
+                </Button>
               ) : !isEditing ? (
                 <Button
                   variant="secondary"
@@ -427,7 +439,12 @@ export default function AdminPage() {
           )}
 
           {activeTab === "faq" && content?.faq && (
-            <FaqForm data={content.faq} onChange={(newData) => updateSectionData("faq", newData)} disabled={!isEditing} />
+            <FaqForm
+              data={content.faq}
+              onChange={(newData) => updateSectionData("faq", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
           )}
 
           {activeTab === "process" && content?.process && (
@@ -511,6 +528,29 @@ export default function AdminPage() {
             setShowAddLogoModal(false);
           }}
           onClose={() => setShowAddLogoModal(false)}
+        />
+      )}
+
+      {/* Add FAQ Modal */}
+      {showAddFaqModal && (
+        <FaqModal
+          onSave={(newFaqData) => {
+            const list = [...(content?.faq?.questions || []), newFaqData];
+            setContent((prev: any) => ({
+              ...prev,
+              faq: {
+                ...prev.faq,
+                badge: "GOT QUESTIONS?",
+                title: "FREQUENTLY ASKED QUESTIONS",
+                description: "Find answers to the most common questions about Abstrakt Creation and our comprehensive digital, creative, and branding services.",
+                buttonText: "VIEW ALL FAQS +",
+                questions: list,
+              },
+            }));
+            setIsEditing(true);
+            setShowAddFaqModal(false);
+          }}
+          onClose={() => setShowAddFaqModal(false)}
         />
       )}
     </div>

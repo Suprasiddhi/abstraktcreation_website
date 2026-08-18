@@ -631,19 +631,25 @@ app.post('/api/content/:id', async (req, res) => {
       }
     }
     else if (id === 'faq') {
+      const badge = contentBody.badge || "GOT QUESTIONS?";
+      const title = contentBody.title || "FREQUENTLY ASKED QUESTIONS";
+      const description = contentBody.description || "Find answers to the most common questions about Abstrakt Creation and our comprehensive digital, creative, and branding services.";
+      const buttonText = contentBody.buttonText || "VIEW ALL FAQS +";
+
       await db.update(faqsMetadata)
         .set({
-          badge: contentBody.badge,
-          title: contentBody.title,
-          description: contentBody.description,
-          buttonText: contentBody.buttonText,
+          badge,
+          title,
+          description,
+          buttonText,
           updatedAt: new Date()
         })
         .where(eq(faqsMetadata.id, 1));
 
       await db.delete(faqsItems);
-      for (let i = 0; i < contentBody.questions.length; i++) {
-        const q = contentBody.questions[i];
+      const questionsList = contentBody.questions || (Array.isArray(contentBody) ? contentBody : []);
+      for (let i = 0; i < questionsList.length; i++) {
+        const q = questionsList[i];
         await db.insert(faqsItems).values({
           question: q.question,
           answer: q.answer,

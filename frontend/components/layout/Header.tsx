@@ -10,7 +10,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="w-full border-b border-neutral-200/50 py-5 px-6 md:px-12 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+    <header className="w-full py-5 px-6 md:px-12 bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between">
         {/* Logo */}
         <a

@@ -2,15 +2,26 @@
 
 import React from "react";
 
+export interface SocialItem {
+  platform: "insta" | "linkedin" | "github";
+  url: string;
+}
+
 interface MemberData {
   name: string;
   role: string;
+  description?: string;
+  avatarUrl?: string;
+  originalAvatarUrl?: string;
+  socials?: SocialItem[];
+  socialPlatform?: "insta" | "linkedin" | "github";
+  socialUrl?: string;
 }
 
 interface PeopleProps {
   data?: {
     team: MemberData[];
-    extraCount: number;
+    extraCount?: number;
   };
 }
 
@@ -26,8 +37,11 @@ export default function People({ data }: PeopleProps) {
   const extraCount = data?.extraCount !== undefined ? data.extraCount : 0;
 
   return (
-    <section id="studio" className="w-full py-20 px-6 md:px-12 bg-background border-b border-neutral-200/60 scroll-mt-24">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-12">
+    <section
+      id="studio"
+      className="w-full min-h-[calc(100vh-80px)] lg:min-h-[calc(100vh-90px)] flex flex-col justify-center py-12 md:py-16 lg:py-20 px-6 md:px-12 bg-background scroll-mt-24"
+    >
+      <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-10 md:gap-12">
         
         {/* Header Block */}
         <div className="flex items-end justify-between border-b border-neutral-200/60 pb-8">
@@ -36,10 +50,9 @@ export default function People({ data }: PeopleProps) {
           </h2>
           <a
             href="#studio"
-            className="group flex items-center text-xs md:text-sm font-semibold text-neutral-500 hover:text-brand transition-colors duration-300 relative py-1"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-brand text-foreground hover:text-white bg-transparent hover:bg-brand text-xs font-mono font-bold uppercase transition-all duration-300 shadow-sm cursor-pointer"
           >
-            Meet the studio &rarr;
-            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-transparent group-hover:bg-brand transition-colors duration-300" />
+            VIEW ALL +
           </a>
         </div>
 
@@ -47,48 +60,44 @@ export default function People({ data }: PeopleProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
           {/* Team Members */}
           {team.map((member, idx) => {
-            return (
+            const imgSrc = member.avatarUrl || member.originalAvatarUrl;
+            const cardContent = (
               <div key={idx} className="flex flex-col group cursor-pointer">
-                {/* Profile Card Container - 3:4 aspect ratio */}
-                <div className="w-full aspect-[3/4] rounded-2xl bg-card-bg border border-neutral-300/40 flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:shadow-lg hover:scale-[1.02] mb-4">
+                {/* Profile Card Container - 4:5 aspect ratio */}
+                <div className="w-full aspect-[4/5] rounded-2xl bg-card-bg border border-neutral-300/40 flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:shadow-lg hover:scale-[1.02] mb-4">
                   <div className="absolute inset-0 bg-neutral-900/0 group-hover:bg-brand/5 transition-all duration-500 pointer-events-none" />
-                  {defaultAvatar}
-                  <span className="absolute bottom-4 left-4 text-[9px] font-mono tracking-widest text-neutral-400 select-none pointer-events-none group-hover:text-neutral-500">
-                    3:4 • ROSTER
-                  </span>
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={member.name} className="w-full h-full object-cover" />
+                  ) : (
+                    defaultAvatar
+                  )}
                 </div>
                 
                 {/* Profile details */}
-                <h3 className="text-base font-bold text-foreground leading-tight">
-                  {member.name}
-                </h3>
+                <div className="flex items-center justify-between gap-1">
+                  <h3 className="text-base font-bold text-foreground leading-tight group-hover:text-brand transition-colors uppercase">
+                    {member.name}
+                  </h3>
+                  {member.socialUrl && (
+                    <span className="text-[10px] font-mono uppercase font-bold text-neutral-400 group-hover:text-brand">
+                      ↗
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-neutral-500 mt-1">
                   {member.role}
                 </p>
               </div>
             );
-          })}
 
-          {/* Card 5: Full Roster (dashed) */}
-          <div className="flex flex-col group cursor-pointer">
-            {/* Dashed Profile Card Container - 3:4 aspect ratio */}
-            <div className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-neutral-300 hover:border-brand flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:shadow-md hover:scale-[1.02] mb-4 bg-transparent">
-              <div className="text-3xl font-black text-neutral-400 group-hover:text-brand transition-colors duration-500">
-                +{extraCount}
-              </div>
-              <span className="absolute bottom-4 left-4 text-[9px] font-mono tracking-widest text-neutral-400 select-none pointer-events-none group-hover:text-brand/60">
-                3:4 • ROSTER
-              </span>
-            </div>
-            
-            {/* Details */}
-            <h3 className="text-base font-bold text-foreground leading-tight group-hover:text-brand transition-colors duration-300">
-              Full roster
-            </h3>
-            <p className="text-xs text-neutral-500 mt-1">
-              on Studio
-            </p>
-          </div>
+            return member.socialUrl ? (
+              <a key={idx} href={member.socialUrl} target="_blank" rel="noopener noreferrer">
+                {cardContent}
+              </a>
+            ) : (
+              cardContent
+            );
+          })}
         </div>
 
       </div>

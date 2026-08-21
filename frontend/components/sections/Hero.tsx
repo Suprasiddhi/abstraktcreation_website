@@ -90,7 +90,7 @@ export default function Hero({ data }: HeroProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full">
 
         {/* Left Column: Heading, Subheading & CTAs */}
-        <div className="lg:col-span-7 flex flex-col justify-start">
+        <div className="lg:col-span-8 xl:col-span-8 flex flex-col justify-start">
           {/* Location Badge */}
           <span
             className="text-[11px] md:text-xs font-semibold tracking-[0.25em] text-brand mb-6 block uppercase"
@@ -100,7 +100,7 @@ export default function Hero({ data }: HeroProps) {
           </span>
 
           {/* Large Headline */}
-          <h1 className="text-[60px] sm:text-[80px] md:text-[100px] lg:text-[110px] font-black tracking-tight leading-[0.9] text-foreground mb-8 select-none uppercase">
+          <h1 className="text-[68px] sm:text-[90px] md:text-[115px] lg:text-[130px] xl:text-[144px] font-black tracking-tight leading-[0.86] text-foreground mb-8 select-none uppercase">
             <span className="block hover:text-brand transition-colors duration-300">
               {mainHeadline}
             </span>
@@ -112,7 +112,7 @@ export default function Hero({ data }: HeroProps) {
           </h1>
 
           {/* Paragraph Description */}
-          <p className="text-lg md:text-xl text-neutral-600 max-w-lg mb-10 leading-relaxed">
+          <p className="text-xl sm:text-2xl md:text-[26px] text-neutral-600 max-w-2xl mb-10 leading-relaxed font-normal">
             {data?.description || ""}
           </p>
 

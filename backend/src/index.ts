@@ -38,7 +38,12 @@ const db = drizzle({ client: pool });
 async function initDbSchema() {
   try {
     await pool.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
-    console.log("Database schema migration: successfully ensured is_bookmarked column on projects table.");
+    await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT \'\';');
+    await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS avatar_url TEXT NOT NULL DEFAULT \'\';');
+    await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS original_avatar_url TEXT NOT NULL DEFAULT \'\';');
+    await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS socials TEXT NOT NULL DEFAULT \'[]\';');
+    await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+    console.log("Database schema migration: successfully ensured all columns on team_members and projects tables.");
   } catch (err) {
     console.error("Database schema init warning:", err);
   }
@@ -402,10 +407,26 @@ app.get('/api/content', async (req, res) => {
 
     const formattedPeople = peopleMetaRows[0] ? {
       team: teamRows
-        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .sort((a, b) => {
+          if (Boolean(a.isBookmarked) !== Boolean(b.isBookmarked)) {
+            return a.isBookmarked ? -1 : 1;
+          }
+          return a.sortOrder - b.sortOrder;
+        })
         .map(m => ({
-          name: m.name,
-          role: m.role
+          name: m.name || "",
+          role: m.role || "",
+          description: m.description || "",
+          avatarUrl: m.avatarUrl || "",
+          originalAvatarUrl: m.originalAvatarUrl || "",
+          isBookmarked: Boolean(m.isBookmarked),
+          socials: (() => {
+            try {
+              return JSON.parse(m.socials || "[]");
+            } catch {
+              return [];
+            }
+          })()
         })),
       extraCount: peopleMetaRows[0].extraCount
     } : undefined;
@@ -670,19 +691,39 @@ app.post('/api/content/:id', async (req, res) => {
       }
     }
     else if (id === 'people') {
+      try {
+        await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT \'\';');
+        await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS avatar_url TEXT NOT NULL DEFAULT \'\';');
+        await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS original_avatar_url TEXT NOT NULL DEFAULT \'\';');
+        await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS socials TEXT NOT NULL DEFAULT \'[]\';');
+        await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+      } catch (e) {
+        console.error("Column check error on people save:", e);
+      }
+
       await db.update(peopleMetadata)
         .set({
-          extraCount: contentBody.extraCount,
+          extraCount: contentBody.extraCount !== undefined ? contentBody.extraCount : 0,
           updatedAt: new Date()
         })
         .where(eq(peopleMetadata.id, 1));
 
       await db.delete(teamMembers);
-      for (let i = 0; i < contentBody.team.length; i++) {
-        const m = contentBody.team[i];
+      const teamList = Array.isArray(contentBody.team) ? contentBody.team : [];
+      for (let i = 0; i < teamList.length; i++) {
+        const m = teamList[i];
+        const socialsStr = typeof m.socials === "string"
+          ? m.socials
+          : JSON.stringify(m.socials || []);
+
         await db.insert(teamMembers).values({
-          name: m.name,
-          role: m.role,
+          name: m.name || "",
+          role: m.role || "",
+          description: m.description || "",
+          avatarUrl: m.avatarUrl || "",
+          originalAvatarUrl: m.originalAvatarUrl || "",
+          isBookmarked: Boolean(m.isBookmarked),
+          socials: socialsStr,
           sortOrder: i
         });
       }

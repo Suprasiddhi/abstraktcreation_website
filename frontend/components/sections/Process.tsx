@@ -20,7 +20,7 @@ export default function Process({ data }: ProcessProps) {
   const steps = data?.steps || [];
 
   return (
-    <section className="w-full py-16 md:py-24 px-6 md:px-12 bg-background border-b border-neutral-200/60">
+    <section className="w-full py-16 md:py-24 px-6 md:px-12 bg-background">
       <div className="max-w-[1400px] mx-auto flex flex-col gap-16 md:gap-20">
         
         {/* HOW IT RUNS grid */}

@@ -87,7 +87,7 @@ export default function SelectedWork({ data }: SelectedWorkProps) {
     <section
       id="work"
       ref={sectionRef}
-      className="w-full bg-black text-white relative border-b border-neutral-800 scroll-mt-20 min-h-[300vh]"
+      className="w-full bg-black text-white relative scroll-mt-20 min-h-[300vh]"
     >
       {/* Sticky Inner Container - Starts after sticky header (72px) to bottom of screen */}
       <div className="sticky top-[72px] h-[calc(100vh-72px)] w-full flex items-stretch overflow-hidden">
@@ -223,14 +223,14 @@ export default function SelectedWork({ data }: SelectedWorkProps) {
                   }}
                 >
                   {/* Full Height Sharp Card - Starts top 0 after header, ends bottom 0 */}
-                  <div className="w-full h-full bg-neutral-950 border-l border-neutral-800 rounded-none overflow-hidden relative group shadow-2xl shadow-black">
+                  <div className="w-full h-full bg-neutral-950 rounded-none overflow-hidden relative group shadow-2xl shadow-black">
                     
                     {/* Media Thumbnail background */}
                     {visualNode}
 
-                    {/* Bottom Gradient & Info Overlay Only (Nothing at top) */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-8 md:p-12 lg:p-14 flex flex-col justify-end z-10">
-                      <div className="flex flex-col gap-2 max-w-2xl">
+                    {/* Bottom Gradient & Info Overlay - Revealed on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent p-8 md:p-12 lg:p-14 flex flex-col justify-end z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                      <div className="flex flex-col gap-2 max-w-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
                         
                         {/* Project Type / Pillar Category Tag */}
                         {(project.category || project.serviceType) && (
@@ -274,7 +274,7 @@ export default function SelectedWork({ data }: SelectedWorkProps) {
             })}
 
             {displayProjects.length === 0 && (
-              <div className="w-full h-full flex items-center justify-center border-l border-dashed border-neutral-800 bg-neutral-950">
+              <div className="w-full h-full flex items-center justify-center bg-neutral-950">
                 <p className="text-sm font-mono text-neutral-500 uppercase tracking-wider">
                   No featured projects published yet
                 </p>

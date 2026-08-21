@@ -99,6 +99,11 @@ export const teamMembers = pgTable("team_members", {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     role: varchar("role", { length: 255 }).notNull(),
+    description: text("description").notNull().default(""),
+    avatarUrl: text("avatar_url").notNull().default(""),
+    originalAvatarUrl: text("original_avatar_url").notNull().default(""),
+    socials: text("socials").notNull().default("[]"),
+    isBookmarked: boolean("is_bookmarked").notNull().default(false),
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -15,6 +15,7 @@ import LogosForm from "./LogosForm";
 import ProjectModal from "./ProjectModal";
 import LogoModal from "./LogoModal";
 import FaqModal from "./FaqModal";
+import PeopleModal from "./PeopleModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
@@ -35,10 +36,11 @@ export default function AdminPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Add Project / Add Logo / Add FAQ Modal state
+  // Add Project / Add Logo / Add FAQ / Add People Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddLogoModal, setShowAddLogoModal] = useState(false);
   const [showAddFaqModal, setShowAddFaqModal] = useState(false);
+  const [showAddPeopleModal, setShowAddPeopleModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -383,6 +385,16 @@ export default function AdminPage() {
                 >
                   + Add QUE
                 </Button>
+              ) : activeTab === "people" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddPeopleModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add people
+                </Button>
               ) : !isEditing ? (
                 <Button
                   variant="secondary"
@@ -452,7 +464,12 @@ export default function AdminPage() {
           )}
 
           {activeTab === "people" && content?.people && (
-            <PeopleForm data={content.people} onChange={(newData) => updateSectionData("people", newData)} disabled={!isEditing} />
+            <PeopleForm
+              data={content.people}
+              onChange={(newData) => updateSectionData("people", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
           )}
 
           {activeTab === "logos" && content?.logos && (
@@ -551,6 +568,25 @@ export default function AdminPage() {
             setShowAddFaqModal(false);
           }}
           onClose={() => setShowAddFaqModal(false)}
+        />
+      )}
+
+      {/* Add People Modal */}
+      {showAddPeopleModal && (
+        <PeopleModal
+          onSave={(newMemberData) => {
+            const list = [...(content?.people?.team || []), newMemberData];
+            setContent((prev: any) => ({
+              ...prev,
+              people: {
+                ...prev.people,
+                team: list,
+              },
+            }));
+            setIsEditing(true);
+            setShowAddPeopleModal(false);
+          }}
+          onClose={() => setShowAddPeopleModal(false)}
         />
       )}
     </div>

@@ -20,7 +20,7 @@ export default function LogoMarquee({ data }: LogoMarqueeProps) {
   const tripled = [...logos, ...logos, ...logos];
 
   return (
-    <section className="w-full py-10 bg-card-bg/25 border-y border-neutral-200/50 overflow-hidden relative select-none">
+    <section className="w-full py-10 bg-card-bg/25 overflow-hidden relative select-none">
       {/* Decorative gradient masks for fading edges */}
       <div className="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />

@@ -47,7 +47,7 @@ export default function Faq({ data }: FaqProps) {
   };
 
   return (
-    <section className="w-full bg-black text-white py-24 px-6 md:px-12 border-b border-neutral-800 scroll-mt-24">
+    <section className="w-full bg-black text-white py-24 px-6 md:px-12 scroll-mt-24">
       <div className="max-w-[1400px] mx-auto flex flex-col items-center text-center">
         {/* Blue Badge */}
         <span className="text-[11px] md:text-xs font-bold tracking-[0.25em] text-brand mb-6 block uppercase">

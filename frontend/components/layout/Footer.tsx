@@ -40,7 +40,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="w-full bg-background border-t border-neutral-200/60 py-16 md:py-20 px-6 md:px-12">
+    <footer className="w-full bg-background py-16 md:py-20 px-6 md:px-12">
       <div className="max-w-[1400px] mx-auto flex flex-col gap-12">
         {/* Top 4-Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 items-start">

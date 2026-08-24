@@ -74,7 +74,7 @@ export default function Footer() {
             </span>
             <div className="flex flex-col gap-2.5 text-[13px] md:text-sm font-semibold text-neutral-600">
               <a href="#work" className="hover:text-brand transition-colors duration-200">Work</a>
-              <a href="#capabilities" className="hover:text-brand transition-colors duration-200">Capabilities</a>
+              <a href="#capabilities" className="hover:text-brand transition-colors duration-200">Service</a>
               <a href="#studio" className="hover:text-brand transition-colors duration-200">Studio</a>
               <a href="#contact" className="hover:text-brand transition-colors duration-200">Contact</a>
             </div>

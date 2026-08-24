@@ -37,13 +37,15 @@ const db = drizzle({ client: pool });
 // Automatically ensure schema columns exist
 async function initDbSchema() {
   try {
+    await pool.query('ALTER TABLE capabilities ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT \'\';');
+    await pool.query('ALTER TABLE capabilities ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
     await pool.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT \'\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS avatar_url TEXT NOT NULL DEFAULT \'\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS original_avatar_url TEXT NOT NULL DEFAULT \'\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS socials TEXT NOT NULL DEFAULT \'[]\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
-    console.log("Database schema migration: successfully ensured all columns on team_members and projects tables.");
+    console.log("Database schema migration: successfully ensured all columns on capabilities, team_members and projects tables.");
   } catch (err) {
     console.error("Database schema init warning:", err);
   }
@@ -105,8 +107,10 @@ async function seedDatabase() {
           label: "LEADING",
           title: "DIGITAL",
           description: "Web solutions — high-performance engineering and UI/UX systems, in the studio's own words.",
+          imageUrl: "",
           tag: "Web Solutions",
-          badge: "LEAD PILLAR — SWAPPABLE SLOT"
+          badge: "LEAD PILLAR — SWAPPABLE SLOT",
+          isBookmarked: false
         },
         {
           id: "identity",
@@ -114,8 +118,10 @@ async function seedDatabase() {
           label: "SHAPING",
           title: "IDENTITY",
           description: "Brand architecture — premium corporate design systems, bespoke typography, and art direction.",
+          imageUrl: "",
           tag: "Brand Architecture",
-          badge: "BRAND SYSTEM — SWAPPABLE SLOT"
+          badge: "BRAND SYSTEM — SWAPPABLE SLOT",
+          isBookmarked: false
         },
         {
           id: "campaign",
@@ -123,8 +129,10 @@ async function seedDatabase() {
           label: "ENGAGING",
           title: "CAMPAIGN",
           description: "Creative storytelling — digital marketing, conversion funnel optimization, and content strategies.",
+          imageUrl: "",
           tag: "Campaign Launch",
-          badge: "MARKETING — SWAPPABLE SLOT"
+          badge: "MARKETING — SWAPPABLE SLOT",
+          isBookmarked: false
         },
         {
           id: "creative",
@@ -132,8 +140,10 @@ async function seedDatabase() {
           label: "EXPRESSING",
           title: "CREATIVE",
           description: "Multimedia assets — 3D modeling, premium video production, sound design, and motion graphics.",
+          imageUrl: "",
           tag: "Motion & 3D",
-          badge: "CREATIVE — SWAPPABLE SLOT"
+          badge: "CREATIVE — SWAPPABLE SLOT",
+          isBookmarked: false
         }
       ];
 
@@ -324,8 +334,10 @@ app.get('/api/content', async (req, res) => {
           label: row.label,
           title: row.title,
           description: row.description,
+          imageUrl: row.imageUrl || "",
           tag: row.tag,
-          badge: row.badge
+          badge: row.badge,
+          isBookmarked: Boolean(row.isBookmarked)
         };
         return acc;
       }, {} as Record<string, any>)
@@ -509,8 +521,10 @@ app.post('/api/content/clear', async (req, res) => {
         label: labels[i],
         title: "",
         description: "",
+        imageUrl: "",
         tag: "",
-        badge: ""
+        badge: "",
+        isBookmarked: false
       });
     }
 
@@ -601,16 +615,25 @@ app.post('/api/content/:id', async (req, res) => {
         .where(eq(position.id, 1));
     }
     else if (id === 'capabilities') {
+      try {
+        await pool.query('ALTER TABLE capabilities ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT \'\';');
+        await pool.query('ALTER TABLE capabilities ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
+      } catch (e) {
+        console.error("Column check error on capabilities save:", e);
+      }
       await db.delete(capabilities);
       for (const [key, pillar] of Object.entries(contentBody.pillars)) {
+        const p = pillar as any;
         await db.insert(capabilities).values({
           id: key,
-          slotId: (pillar as any).id,
-          label: (pillar as any).label,
-          title: (pillar as any).title,
-          description: (pillar as any).description,
-          tag: (pillar as any).tag,
-          badge: (pillar as any).badge
+          slotId: p.id || "",
+          label: p.label || "",
+          title: p.title || "",
+          description: p.description || "",
+          imageUrl: p.imageUrl || "",
+          tag: p.tag || "",
+          badge: p.badge || "",
+          isBookmarked: Boolean(p.isBookmarked)
         });
       }
     }

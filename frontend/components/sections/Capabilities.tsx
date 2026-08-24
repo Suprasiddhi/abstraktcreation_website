@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Pillar {
   id?: string;
@@ -66,12 +67,20 @@ export default function Capabilities({ data }: CapabilitiesProps) {
       {/* Section Header (Constrained to max-w-[1400px] to match site layout) */}
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
         <div className="border-b border-neutral-200/60 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <h2 className="text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-foreground leading-none uppercase">
-            SERVICE
-          </h2>
-          <span className="text-xs font-mono tracking-[0.25em] text-neutral-400 font-semibold uppercase">
-            OUR EXPERTISE &amp; OFFERINGS
-          </span>
+          <div>
+            <h2 className="text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-foreground leading-none uppercase">
+              SERVICE
+            </h2>
+            <span className="text-xs font-mono tracking-[0.25em] text-neutral-400 font-semibold uppercase mt-2 block">
+              OUR EXPERTISE &amp; OFFERINGS
+            </span>
+          </div>
+          <Link
+            href="/service"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-brand text-foreground hover:text-white bg-transparent hover:bg-brand text-xs font-mono font-bold uppercase transition-all duration-300 shadow-sm cursor-pointer"
+          >
+            VIEW ALL +
+          </Link>
         </div>
       </div>
 

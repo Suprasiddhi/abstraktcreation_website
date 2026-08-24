@@ -277,9 +277,15 @@ async function seedDatabase() {
   }
 }
 
+let cachedContentData: any = null;
+
 // REST GET: Fetch all sections
 app.get('/api/content', async (req, res) => {
   try {
+    if (cachedContentData) {
+      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      return res.json(cachedContentData);
+    }
     const [
       heroRows,
       positionRows,
@@ -451,7 +457,7 @@ app.get('/api/content', async (req, res) => {
         imageUrl: logo.imageUrl
       }));
 
-    res.json({
+    const responseData = {
       hero: formattedHero,
       position: formattedPosition,
       capabilities: formattedCapabilities,
@@ -460,7 +466,11 @@ app.get('/api/content', async (req, res) => {
       process: formattedProcess,
       people: formattedPeople,
       logos: formattedLogos
-    });
+    };
+
+    cachedContentData = responseData;
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.json(responseData);
   } catch (error) {
     console.error("Failed to load site content from database tables:", error);
     res.status(500).json({ error: "Failed to load dynamic site content" });
@@ -563,6 +573,7 @@ app.post('/api/content/clear', async (req, res) => {
     await db.delete(logos);
 
     console.log("Database cleared successfully by admin.");
+    cachedContentData = null;
     res.json({ success: true, message: "All content cleared successfully. Ready for manual input." });
   } catch (error: any) {
     console.error("Failed to clear database:", error);
@@ -770,6 +781,7 @@ app.post('/api/content/:id', async (req, res) => {
       return res.status(400).json({ error: `Invalid section ID: '${id}'` });
     }
 
+    cachedContentData = null;
     res.json({ success: true, message: `Section '${id}' updated successfully.` });
   } catch (error: any) {
     console.error(`Failed to update SQL table for section '${id}':`, error);

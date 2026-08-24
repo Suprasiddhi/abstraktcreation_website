@@ -58,11 +58,30 @@ export default function TeamPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // 1. Instant render from client sessionStorage cache
+    const cached = sessionStorage.getItem("abstrakt_content");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed?.people?.team) {
+          setTeam(parsed.people.team);
+          setLoading(false);
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fetch fresh team content in background
     fetch("http://localhost:3001/api/content")
       .then((res) => res.json())
       .then((data) => {
         if (data?.people?.team) {
           setTeam(data.people.team);
+          try {
+            sessionStorage.setItem("abstrakt_content", JSON.stringify(data));
+          } catch (e) {
+            // Ignore if base64 images exceed browser storage quota limit
+          }
         }
         setLoading(false);
       })

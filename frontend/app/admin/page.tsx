@@ -16,6 +16,7 @@ import ProjectModal from "./ProjectModal";
 import LogoModal from "./LogoModal";
 import FaqModal from "./FaqModal";
 import PeopleModal from "./PeopleModal";
+import ServiceModal from "./ServiceModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
 
@@ -36,11 +37,12 @@ export default function AdminPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Add Project / Add Logo / Add FAQ / Add People Modal state
+  // Add Project / Add Logo / Add FAQ / Add People / Add Service Modal state
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddLogoModal, setShowAddLogoModal] = useState(false);
   const [showAddFaqModal, setShowAddFaqModal] = useState(false);
   const [showAddPeopleModal, setShowAddPeopleModal] = useState(false);
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -323,7 +325,7 @@ export default function AdminPage() {
                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-850"
                 }`}
               >
-                {tab === "position" ? "Statement" : tab === "work" ? "Selected Work" : tab === "logos" ? "Logos" : tab}
+                {tab === "position" ? "Statement" : tab === "work" ? "Selected Work" : tab === "logos" ? "Logos" : tab === "capabilities" ? "Service" : tab}
               </button>
             );
           })}
@@ -346,7 +348,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between border-b border-neutral-100 pb-5 mb-8">
             <div>
               <h2 className="text-xl font-black uppercase text-foreground leading-none">
-                EDIT {activeTab === "position" ? "Brand Statement" : activeTab === "work" ? "Selected Work" : activeTab}
+                EDIT {activeTab === "position" ? "Brand Statement" : activeTab === "work" ? "Selected Work" : activeTab === "capabilities" ? "Service" : activeTab}
               </h2>
               <p className="text-xs text-neutral-400 mt-1 font-mono uppercase tracking-wider">
                 {isEditing ? "Editing Mode — changes are unsaved" : "View Mode — content is locked"}
@@ -355,7 +357,17 @@ export default function AdminPage() {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              {!isEditing && activeTab === "work" ? (
+              {activeTab === "capabilities" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddServiceModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add service
+                </Button>
+              ) : activeTab === "work" ? (
                 <Button
                   variant="primary"
                   onClick={() => {
@@ -365,7 +377,7 @@ export default function AdminPage() {
                 >
                   + Add Project
                 </Button>
-              ) : !isEditing && activeTab === "logos" ? (
+              ) : activeTab === "logos" ? (
                 <Button
                   variant="primary"
                   onClick={() => {
@@ -375,7 +387,7 @@ export default function AdminPage() {
                 >
                   + Add Logo
                 </Button>
-              ) : !isEditing && activeTab === "faq" ? (
+              ) : activeTab === "faq" ? (
                 <Button
                   variant="primary"
                   onClick={() => {
@@ -431,7 +443,13 @@ export default function AdminPage() {
           )}
 
           {activeTab === "capabilities" && content?.capabilities && (
-            <CapabilitiesForm data={content.capabilities} onChange={(newData) => updateSectionData("capabilities", newData)} disabled={!isEditing} />
+            <CapabilitiesForm
+              data={content.capabilities}
+              onChange={(newData) => updateSectionData("capabilities", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              onAddService={() => setShowAddServiceModal(true)}
+              disabled={!isEditing}
+            />
           )}
 
           {activeTab === "work" && content?.work && (
@@ -587,6 +605,40 @@ export default function AdminPage() {
             setShowAddPeopleModal(false);
           }}
           onClose={() => setShowAddPeopleModal(false)}
+        />
+      )}
+
+      {/* Add Service Modal */}
+      {showAddServiceModal && (
+        <ServiceModal
+          onSave={(newServiceData) => {
+            const pillars = content?.capabilities?.pillars || {};
+            const count = Object.keys(pillars).length + 1;
+            const newKey = `service_${count}`;
+            const newId = String(count).padStart(2, "0");
+
+            setContent((prev: any) => ({
+              ...prev,
+              capabilities: {
+                ...prev.capabilities,
+                pillars: {
+                  ...pillars,
+                  [newKey]: {
+                    id: newId,
+                    label: newServiceData.label,
+                    title: newServiceData.title,
+                    description: newServiceData.description,
+                    imageUrl: newServiceData.imageUrl,
+                    tag: newServiceData.tag,
+                    badge: newServiceData.badge,
+                  },
+                },
+              },
+            }));
+            setIsEditing(true);
+            setShowAddServiceModal(false);
+          }}
+          onClose={() => setShowAddServiceModal(false)}
         />
       )}
     </div>

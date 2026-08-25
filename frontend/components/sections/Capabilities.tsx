@@ -1,196 +1,193 @@
 "use client";
 
-import React, { useState } from "react";
-
-type PillarKey = "digital" | "identity" | "campaign" | "creative";
+import React, { useRef, useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Pillar {
-  id: string;
-  label: string;
+  id?: string;
   title: string;
-  description: string;
-  tag: string;
-  badge: string;
+  description?: string;
+  imageUrl?: string;
+  label?: string;
+  tag?: string;
+  badge?: string;
 }
 
 interface CapabilitiesProps {
   data?: {
-    pillars: Record<PillarKey, Pillar>;
+    pillars?: Record<string, Pillar> | Pillar[];
   };
 }
 
 export default function Capabilities({ data }: CapabilitiesProps) {
-  const [activePillar, setActivePillar] = useState<PillarKey>("digital");
+  const rawPillars = data?.pillars;
+  const servicesList: Pillar[] = rawPillars
+    ? Array.isArray(rawPillars)
+      ? rawPillars
+      : Object.values(rawPillars)
+    : [];
 
-  const pillars = data?.pillars || {} as Record<PillarKey, Pillar>;
-  const active = pillars[activePillar] || {
-    id: "",
-    label: "",
-    title: "",
-    description: "",
-    tag: "",
-    badge: "",
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 5);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScroll);
+      window.addEventListener("resize", checkScroll);
+    }
+    return () => {
+      if (el) el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [servicesList]);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   return (
-    <section id="capabilities" className="w-full py-20 px-6 md:px-12 bg-background scroll-mt-24">
-      <div className="max-w-[1400px] mx-auto">
-        
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-neutral-200/60 pb-8 mb-10">
-          <h2 className="text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-foreground leading-none">
-            CAPABILITIES
-          </h2>
-          <div className="text-[10px] md:text-xs font-mono tracking-[0.25em] text-neutral-400 font-semibold uppercase mt-4 md:mt-0 select-none">
-            FOUR PILLARS • EIGHT SERVICES
+    <section id="capabilities" className="w-full py-20 bg-background scroll-mt-24 overflow-hidden">
+      {/* Section Header (Constrained to max-w-[1400px] to match site layout) */}
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        <div className="border-b border-neutral-200/60 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-[36px] sm:text-[46px] md:text-[54px] font-black tracking-tight text-foreground leading-none uppercase">
+              SERVICE
+            </h2>
+            <span className="text-xs font-mono tracking-[0.25em] text-neutral-400 font-semibold uppercase mt-2 block">
+              OUR EXPERTISE &amp; OFFERINGS
+            </span>
           </div>
+          <Link
+            href="/service"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-brand text-foreground hover:text-white bg-transparent hover:bg-brand text-xs font-mono font-bold uppercase transition-all duration-300 shadow-sm cursor-pointer"
+          >
+            VIEW ALL +
+          </Link>
         </div>
-
-        {/* Tab Selection Row */}
-        <div className="flex flex-wrap gap-3 md:gap-4 mb-6">
-          {(Object.keys(pillars) as PillarKey[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => setActivePillar(key)}
-              className={`px-4 py-2 rounded-full text-xs font-mono font-semibold tracking-wider uppercase transition-all duration-300 cursor-pointer ${
-                activePillar === key
-                  ? "bg-brand text-white shadow-sm"
-                  : "bg-neutral-200/50 text-neutral-500 hover:bg-neutral-200 hover:text-foreground"
-              }`}
-            >
-              {pillars[key].id} {key}
-            </button>
-          ))}
-        </div>
-
-        {/* Main Sleek Dark Card */}
-        <div className="w-full bg-neutral-950 text-white rounded-[24px] p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden transition-all duration-500">
-          
-          {/* Subtle grid pattern background */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neutral-900/40 via-transparent to-transparent pointer-events-none" />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
-            
-            {/* Left Side Content */}
-            <div className="lg:col-span-6 flex flex-col items-start justify-center">
-              {/* Category label */}
-              <span className="text-[11px] md:text-xs font-mono font-bold tracking-[0.3em] text-brand mb-4 block uppercase">
-                {active.id} — {active.label}
-              </span>
-              
-              {/* Giant Title */}
-              <h3 className="text-5xl sm:text-6xl md:text-[76px] font-black tracking-tight leading-none mb-6 text-white uppercase select-none">
-                {active.title}
-              </h3>
-              
-              {/* Description */}
-              <p className="text-neutral-400 text-base md:text-lg mb-8 leading-relaxed max-w-md">
-                {active.description}
-              </p>
-              
-              {/* Sub-tag Button */}
-              <button className="inline-flex items-center text-xs font-mono tracking-widest text-neutral-300 border border-neutral-800 rounded-full px-4 py-2 bg-neutral-900/40 hover:bg-brand hover:border-brand hover:text-white transition-all duration-300 cursor-pointer">
-                {active.tag}
-              </button>
-            </div>
-
-            {/* Right Side Mock Visualizer Sandbox */}
-            <div className="lg:col-span-6 flex flex-col items-stretch">
-              {/* Swappable Badge Label */}
-              <div className="self-end mb-3">
-                <span className="text-[9px] font-mono tracking-[0.18em] text-neutral-500 border border-neutral-800 rounded px-2.5 py-1 bg-neutral-900/20">
-                  {active.badge}
-                </span>
-              </div>
-
-              {/* Aspect Ratio Box */}
-              <div className="aspect-[16/9] w-full rounded-xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center relative overflow-hidden group shadow-inner">
-                
-                {/* 1. DIGITAL Interactive Graphic */}
-                {activePillar === "digital" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                    {/* Simulated Wireframe Visuals */}
-                    <div className="w-full max-w-xs border border-neutral-700/60 rounded-lg p-3 bg-neutral-950/80 flex flex-col gap-2 transition-transform duration-500 group-hover:scale-105">
-                      <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                        <div className="w-8 h-2 bg-brand rounded" />
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 rounded-full bg-neutral-700" />
-                          <div className="w-2 h-2 rounded-full bg-neutral-700" />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 py-1">
-                        <div className="h-10 border border-dashed border-neutral-800 rounded flex items-center justify-center"><div className="w-4 h-4 rounded-full border border-neutral-700" /></div>
-                        <div className="h-10 border border-dashed border-neutral-800 rounded flex items-center justify-center"><div className="w-4 h-4 rounded-full border border-neutral-700" /></div>
-                        <div className="h-10 border border-dashed border-neutral-800 rounded flex items-center justify-center"><div className="w-4 h-4 rounded-full border border-neutral-700" /></div>
-                      </div>
-                      <div className="w-full h-8 bg-neutral-900 rounded border border-neutral-800 flex items-center justify-center"><span className="text-[8px] font-mono text-neutral-500">BUTTON_TRIGGER</span></div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. IDENTITY Interactive Graphic */}
-                {activePillar === "identity" && (
-                  <div className="absolute inset-0 flex items-center justify-center p-6">
-                    {/* Geometric Grid construction */}
-                    <div className="w-44 h-44 relative border border-dashed border-neutral-800 rounded-full flex items-center justify-center group-hover:rotate-45 transition-transform duration-700">
-                      <div className="absolute inset-4 border border-dashed border-neutral-700/50 rounded-full" />
-                      <div className="absolute inset-0 w-full h-[1px] bg-neutral-800/80" />
-                      <div className="absolute inset-0 h-full w-[1px] bg-neutral-800/80" />
-                      <div className="w-16 h-16 border-2 border-brand flex items-center justify-center text-xs font-mono font-bold">
-                        A
-                      </div>
-                      <div className="absolute top-2 right-2 text-[8px] font-mono text-neutral-600">R: 88px</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. CAMPAIGN Interactive Graphic */}
-                {activePillar === "campaign" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                    {/* Animated Analytics chart simulation */}
-                    <div className="w-full max-w-xs flex flex-col gap-2 bg-neutral-950/50 p-4 border border-neutral-800 rounded-lg">
-                      <div className="flex justify-between items-center text-[10px] font-mono text-neutral-400">
-                        <span>CONVERSIONS</span>
-                        <span className="text-emerald-400 font-bold">+28.4%</span>
-                      </div>
-                      <svg className="w-full h-16 text-brand" viewBox="0 0 100 30" fill="none">
-                        <path d="M0,25 Q15,10 30,22 T60,5 T90,12 T100,2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                        <path d="M0,25 Q15,10 30,22 T60,5 T90,12 T100,2 L100,30 L0,30 Z" fill="currentColor" fillOpacity="0.08" />
-                        <circle cx="60" cy="5" r="3" className="fill-brand animate-ping" />
-                        <circle cx="60" cy="5" r="2.5" className="fill-brand" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. CREATIVE Interactive Graphic */}
-                {activePillar === "creative" && (
-                  <div className="absolute inset-0 flex items-center justify-center p-6">
-                    {/* 3D mesh block concept */}
-                    <div className="relative w-28 h-28 border border-neutral-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                      <div className="absolute -top-3 -left-3 w-3 h-3 bg-neutral-800 border border-neutral-600" />
-                      <div className="absolute -top-3 -right-3 w-3 h-3 bg-neutral-800 border border-neutral-600" />
-                      <div className="absolute -bottom-3 -left-3 w-3 h-3 bg-neutral-800 border border-neutral-600" />
-                      <div className="absolute -bottom-3 -right-3 w-3 h-3 bg-neutral-800 border border-neutral-600" />
-                      <span className="text-[10px] font-mono text-brand font-bold uppercase tracking-widest animate-pulse">RENDER</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Constant watermark centering text */}
-                <div className="absolute bottom-4 left-0 right-0 text-center select-none z-10 pointer-events-none opacity-40">
-                  <span className="text-[10px] font-mono tracking-[0.25em] text-neutral-500 uppercase">
-                    16:9 • PROJECT PREVIEW
-                  </span>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-
       </div>
+
+      {/* Services Full-Bleed Edge-to-Edge Carousel */}
+      {servicesList.length > 0 ? (
+        <div className="w-full relative group/carousel mt-12">
+          {/* Left Navigation Arrow */}
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            aria-label="Scroll services left"
+            className={`absolute left-2 sm:left-4 md:left-6 xl:left-[calc(max(16px,(100vw-1400px)/2))] top-1/2 -translate-y-1/2 z-30 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/90 backdrop-blur-md border border-neutral-700/80 text-white flex items-center justify-center transition-all duration-300 shadow-2xl ${
+              canScrollLeft
+                ? "opacity-100 hover:bg-brand hover:text-black hover:border-brand hover:scale-110 cursor-pointer active:scale-95"
+                : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+
+          {/* Right Navigation Arrow */}
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            aria-label="Scroll services right"
+            className={`absolute right-2 sm:right-4 md:right-6 xl:right-[calc(max(16px,(100vw-1400px)/2))] top-1/2 -translate-y-1/2 z-30 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/90 backdrop-blur-md border border-neutral-700/80 text-white flex items-center justify-center transition-all duration-300 shadow-2xl ${
+              canScrollRight
+                ? "opacity-100 hover:bg-brand hover:text-black hover:border-brand hover:scale-110 cursor-pointer active:scale-95"
+                : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+
+          {/* Single Row Horizontal Cards Container (Full-bleed across viewport with generous side padding) */}
+          <div
+            ref={scrollContainerRef}
+            className="flex items-stretch gap-6 md:gap-8 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory select-none scrollbar-none px-8 sm:px-16 md:px-24 xl:px-[calc(max(64px,(100vw-1400px)/2+48px))]"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {servicesList.map((service, idx) => {
+              const displayNum = service.id || String(idx + 1).padStart(2, "0");
+              return (
+                <div
+                  key={service.id || idx}
+                  className="group relative w-[300px] sm:w-[360px] md:w-[410px] shrink-0 min-h-[380px] sm:min-h-[420px] rounded-3xl overflow-hidden border border-neutral-800 hover:border-brand/70 transition-all duration-500 flex flex-col justify-between p-8 shadow-2xl hover:shadow-brand/10 hover:-translate-y-2 cursor-pointer snap-start"
+                >
+                  {/* Background Image / Gradient */}
+                  {service.imageUrl ? (
+                    <img
+                      src={service.imageUrl}
+                      alt={service.title}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  )}
+
+                  {/* Dark Gradient Overlay for optimal readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/30 group-hover:from-black/90 transition-opacity duration-500 pointer-events-none" />
+
+                  {/* Top Badge Row */}
+                  <div className="relative z-10 flex items-center justify-between">
+                    <span className="bg-black/60 backdrop-blur-md border border-neutral-700/60 text-brand text-xs font-mono font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md">
+                      {displayNum}
+                    </span>
+                  </div>
+
+                  {/* Bottom Info Row (Title over background) */}
+                  <div className="relative z-10 flex flex-col justify-end gap-2.5 pt-12">
+                    <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase group-hover:text-brand transition-colors duration-300 leading-tight">
+                      {service.title}
+                    </h3>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 mt-12">
+          <div className="w-full py-16 px-6 rounded-2xl border border-dashed border-neutral-300 text-center bg-neutral-50/50">
+            <p className="text-sm font-mono text-neutral-400 uppercase tracking-wider">
+              No services added yet. Add new services from the administrative control panel.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+

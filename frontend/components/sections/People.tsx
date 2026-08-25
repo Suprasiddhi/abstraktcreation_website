@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 export interface SocialItem {
   platform: "insta" | "linkedin" | "github";
@@ -48,12 +49,12 @@ export default function People({ data }: PeopleProps) {
           <h2 className="text-[32px] sm:text-[40px] md:text-[46px] font-black tracking-tight text-foreground leading-none uppercase">
             THE PEOPLE
           </h2>
-          <a
-            href="#studio"
+          <Link
+            href="/team"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-brand text-foreground hover:text-white bg-transparent hover:bg-brand text-xs font-mono font-bold uppercase transition-all duration-300 shadow-sm cursor-pointer"
           >
             VIEW ALL +
-          </a>
+          </Link>
         </div>
 
         {/* 5-Column Grid Layout */}

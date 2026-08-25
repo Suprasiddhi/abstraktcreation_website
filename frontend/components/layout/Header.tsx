@@ -3,10 +3,10 @@ import Button from "../ui/Button";
 
 export default function Header() {
   const navLinks = [
-    { label: "Capabilities", href: "#capabilities" },
-    { label: "Work", href: "#work" },
-    { label: "Studio", href: "#studio" },
-    { label: "Contact", href: "#contact" },
+    { label: "Service", href: "/#capabilities" },
+    { label: "Work", href: "/#work" },
+    { label: "Studio", href: "/#studio" },
+    { label: "Contact", href: "/#contact" },
   ];
 
   return (
@@ -36,7 +36,7 @@ export default function Header() {
 
         {/* CTA Button */}
         <div>
-          <a href="#contact">
+          <a href="/#contact">
             <Button variant="primary">
               Start a project
             </Button>

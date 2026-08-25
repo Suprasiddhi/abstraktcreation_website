@@ -26,11 +26,29 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // 1. Instant render from client sessionStorage cache
+    const cached = sessionStorage.getItem("abstrakt_content");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed) {
+          setContent(parsed);
+          setLoading(false);
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fetch fresh content in background
     fetch("http://localhost:3001/api/content")
       .then((res) => res.json())
       .then((data) => {
         setContent(data);
         setLoading(false);
+        try {
+          sessionStorage.setItem("abstrakt_content", JSON.stringify(data));
+        } catch (e) {
+          // Ignore if base64 images exceed browser 5MB storage limit
+        }
       })
       .catch((err) => {
         console.error("Failed to load dynamic content from API:", err);

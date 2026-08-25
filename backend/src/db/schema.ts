@@ -29,11 +29,13 @@ export const position = pgTable("position", {
 export const capabilities = pgTable("capabilities", {
     id: varchar("id", { length: 50 }).primaryKey(), // digital, identity, campaign, creative
     slotId: varchar("slot_id", { length: 10 }).notNull(), // 01, 02, 03, 04
-    label: varchar("label", { length: 255 }).notNull(),
-    title: varchar("title", { length: 255 }).notNull(),
-    description: text("description").notNull(),
-    tag: varchar("tag", { length: 255 }).notNull(),
-    badge: varchar("badge", { length: 255 }).notNull(),
+    label: varchar("label", { length: 255 }).notNull().default(""),
+    title: varchar("title", { length: 255 }).notNull().default(""),
+    description: text("description").notNull().default(""),
+    imageUrl: text("image_url").notNull().default(""),
+    tag: varchar("tag", { length: 255 }).notNull().default(""),
+    badge: varchar("badge", { length: 255 }).notNull().default(""),
+    isBookmarked: boolean("is_bookmarked").notNull().default(false),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

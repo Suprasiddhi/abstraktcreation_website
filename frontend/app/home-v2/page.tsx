@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAbstraktMotion } from "../../lib/v2/useAbstraktMotion";
 import { useLenis } from "../../lib/v2/useLenis";
 import CustomCursor from "../../components/v2/CustomCursor";
@@ -29,31 +29,69 @@ import {
   peopleContent,
   testimonialsContent,
   careersContent,
-  hiringTeamContent,
   faqContent,
 } from "./content";
 
+// Sections below have no backing table in the existing CMS schema and are
+// intentionally left out of the dynamic wiring — they stay on the static
+// copy from ./content.ts: Stats, Testimonials, Careers copy/roles, and the
+// Selected Work polaroid gallery (kept static by explicit choice).
+
 export default function HomeV2() {
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Each section starts on its static default and hot-swaps to live CMS
+  // data if/when the fetch resolves with non-empty content — the page
+  // never blocks on the network and degrades gracefully if the backend
+  // is unreachable or a table is empty.
+  const [hero, setHero] = useState(heroContent);
+  const [position, setPosition] = useState(positionContent);
+  const [logos, setLogos] = useState(logosContent);
+  const [capabilities, setCapabilities] = useState(capabilitiesContent);
+  const [process, setProcess] = useState(processContent);
+  const [people, setPeople] = useState(peopleContent);
+  const [faq, setFaq] = useState(faqContent);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.hero?.headlineLine1) setHero(data.hero);
+        if (data?.position?.statement) setPosition(data.position);
+        if (Array.isArray(data?.logos) && data.logos.length) setLogos(data.logos);
+        if (data?.capabilities?.pillars) setCapabilities(data.capabilities);
+        if (Array.isArray(data?.process?.steps) && data.process.steps.length) setProcess(data.process);
+        if (Array.isArray(data?.people?.team) && data.people.team.length) setPeople(data.people);
+        if (Array.isArray(data?.faq?.questions) && data.faq.questions.length) {
+          setFaq((prev) => ({ ...prev, questions: data.faq.questions }));
+        }
+      })
+      .catch(() => {
+        // Backend unreachable — keep the static defaults, no error shown.
+      });
+  }, []);
+
   useLenis();
-  useAbstraktMotion(rootRef);
+  useAbstraktMotion(rootRef, [hero, position, logos, capabilities, process, people, faq]);
+
+  const hiringTeam = people.team.slice(0, 2);
 
   return (
     <div ref={rootRef} style={{ width: "100%", overflowX: "clip" }}>
       <CustomCursor />
       <NavV2 />
       <main id="top" data-screen-label="Home" style={{ width: "100%", overflow: "clip" }}>
-        <HeroV2 data={heroContent} />
-        <PositionV2 data={positionContent} />
-        <TrustedByV2 data={logosContent} />
+        <HeroV2 data={hero} />
+        <PositionV2 data={position} />
+        <TrustedByV2 data={logos} />
         <StatsV2 data={statsContent} />
-        <CapabilitiesV2 data={capabilitiesContent} />
+        <CapabilitiesV2 data={capabilities} />
         <SelectedWorkV2 data={workContent} />
-        <ProcessV2 data={processContent} />
-        <StudioV2 data={peopleContent} />
+        <ProcessV2 data={process} />
+        <StudioV2 data={people} />
         <TestimonialsV2 data={testimonialsContent} />
-        <CareersV2 data={careersContent} hiringTeam={hiringTeamContent} />
-        <FaqV2 data={faqContent} />
+        <CareersV2 data={careersContent} hiringTeam={hiringTeam} />
+        <FaqV2 data={faq} />
         <ContactV2 />
       </main>
       <FooterV2 />

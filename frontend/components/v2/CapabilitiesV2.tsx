@@ -1,34 +1,54 @@
 import React from "react";
-import PlaceholderSlot from "./PlaceholderSlot";
 import { displayFont, MUTED } from "./tokens";
 
-type PillarKey = "digital" | "identity" | "campaign" | "creative";
+type ThemeKey = "digital" | "identity" | "campaign" | "creative";
 
 interface Pillar {
-  id: string;
-  label: string;
-  title: string;
-  description: string;
-  tag: string;
+  id?: string;
+  label?: string;
+  title?: string;
+  description?: string;
+  tag?: string;
   badge?: string;
+  imageUrl?: string;
 }
 
 interface CapabilitiesV2Props {
-  data?: { pillars: Record<PillarKey, Pillar> };
+  data?: { pillars: Record<string, Pillar> };
 }
 
-const ORDER: PillarKey[] = ["digital", "identity", "campaign", "creative"];
+// Cards render whatever pillars the CMS provides (keys are not fixed), so
+// themes just cycle through this order by index.
+const THEME_ORDER: ThemeKey[] = ["digital", "identity", "campaign", "creative"];
 
-const CARD_THEME: Record<PillarKey, { bg: string; fg: string; eyebrow: string; muted: string; mediaBg: string; chipBorder: string }> = {
+const CARD_THEME: Record<ThemeKey, { bg: string; fg: string; eyebrow: string; muted: string; mediaBg: string; chipBorder: string }> = {
   digital: { bg: "#0E0E0E", fg: "#F7F6F3", eyebrow: "#9A78F5", muted: "#9C9B95", mediaBg: "#151515", chipBorder: "#2A2A2A" },
   identity: { bg: "#501EBD", fg: "#ffffff", eyebrow: "rgba(255,255,255,.7)", muted: "rgba(255,255,255,.78)", mediaBg: "#3A1590", chipBorder: "rgba(255,255,255,.28)" },
   campaign: { bg: "#EAE9E4", fg: "#0E0E0E", eyebrow: "#501EBD", muted: "#5C5C58", mediaBg: "#DEDDD7", chipBorder: "#CFCEC7" },
   creative: { bg: "#0E0E0E", fg: "#F7F6F3", eyebrow: "#9A78F5", muted: "#9C9B95", mediaBg: "#151515", chipBorder: "#2A2A2A" },
 };
 
+// Local fallback artwork for the card's media half, cycled by pillar index.
+// A pillar's own CMS imageUrl always wins when one is set.
+const FALLBACK_MEDIA = [
+  "/images/capabilities/capability-1.png",
+  "/images/capabilities/capability-2.png",
+  "/images/capabilities/capability-3.png",
+  "/images/capabilities/capability-4.png",
+  "/images/capabilities/capability-5.png",
+];
+
 export default function CapabilitiesV2({ data }: CapabilitiesV2Props) {
-  const pillars = data?.pillars;
-  if (!pillars) return null;
+  const pillarList = Object.values(data?.pillars || {})
+    .filter((p) => p && (p.title || p.label))
+    .sort((a, b) => {
+      const na = parseInt(a.id || "", 10);
+      const nb = parseInt(b.id || "", 10);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+  if (!pillarList.length) return null;
 
   return (
     <section id="capabilities" data-screen-label="Capabilities" style={{ padding: "0 0 clamp(50px,8vh,110px)", scrollMarginTop: 90 }}>
@@ -57,15 +77,13 @@ export default function CapabilitiesV2({ data }: CapabilitiesV2Props) {
       </div>
 
       <div style={{ maxWidth: 1680, margin: "0 auto", padding: "clamp(24px,4vh,48px) clamp(18px,3.6vw,60px) 0" }}>
-        {ORDER.map((key, i) => {
-          const pillar = pillars[key];
-          if (!pillar) return null;
-          const theme = CARD_THEME[key];
+        {pillarList.map((pillar, i) => {
+          const theme = CARD_THEME[THEME_ORDER[i % THEME_ORDER.length]];
           const chips = (pillar.tag || "").split(",").map((t) => t.trim()).filter(Boolean);
 
           return (
             <div
-              key={key}
+              key={pillar.id || i}
               data-cap="1"
               data-cap-card="1"
               style={{
@@ -112,7 +130,13 @@ export default function CapabilitiesV2({ data }: CapabilitiesV2Props) {
                   </div>
                 </div>
                 <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", background: theme.mediaBg, minWidth: 0 }}>
-                  <PlaceholderSlot label={`${pillar.title} — visual`} tone={key === "campaign" ? "light" : key === "identity" ? "purple" : "dark"} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={pillar.imageUrl || FALLBACK_MEDIA[i % FALLBACK_MEDIA.length]}
+                    alt={`${pillar.title || pillar.label} visual`}
+                    loading="lazy"
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
                 </div>
               </div>
             </div>

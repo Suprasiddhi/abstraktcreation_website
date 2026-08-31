@@ -1,0 +1,30 @@
+$ tsx watch src/index.ts
+◇ injected env (2) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+DATABASE_URL connection string is loaded: YES
+(node:32080) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Backend Express server is running on http://localhost:3001
+Database seeding skipped via SKIP_SEED environment variable.
+Database schema migration: successfully ensured all columns on team_members and projects tables.
+4:29:48 PM [tsx] change in ./src\index.ts Restarting...
+◇ injected env (2) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+DATABASE_URL connection string is loaded: YES
+(node:12972) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Backend Express server is running on http://localhost:3001
+Database seeding skipped via SKIP_SEED environment variable.
+Database schema migration: successfully ensured all columns on capabilities, team_members and projects tables.

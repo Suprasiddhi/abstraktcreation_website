@@ -15,19 +15,19 @@ export default function FaqV2({ data }: FaqV2Props) {
   if (questions.length === 0) return null;
 
   return (
-    <section data-screen-label="FAQ" style={{ maxWidth: 1680, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(18px,3.6vw,60px)" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.8fr)", gap: "clamp(28px,4vw,72px)", alignItems: "start" }}>
+    <section data-reveal="1" data-depth="1" data-screen-label="FAQ" style={{ maxWidth: 1680, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(18px,3.6vw,60px)" }}>
+      <div data-depth-inner="dim" style={{ display: "grid", gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.8fr)", gap: "clamp(28px,4vw,72px)", alignItems: "start" }}>
         <div style={{ position: "sticky", top: 120 }}>
-          <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, marginBottom: 14 }}>
+          <span data-rv="eyebrow" style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, marginBottom: 14 }}>
             (08) QUESTIONS
           </span>
           <h2 style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(30px,4.2vw,62px)", lineHeight: 0.96, letterSpacing: "-.04em" }}>
-            Asked often
+            <span data-rv="line"><span>Asked often</span></span>
           </h2>
         </div>
         <div style={{ display: "flex", flexDirection: "column", borderTop: `1px solid ${LINE}` }}>
           {questions.map((faq, i) => (
-            <div key={i} data-faq="1" style={{ borderBottom: `1px solid ${LINE}` }}>
+            <div key={i} data-faq="1" data-rv="left" style={{ ["--rv-i" as string]: i + 1, borderBottom: `1px solid ${LINE}` }}>
               <button
                 type="button"
                 data-action="toggle-faq"

@@ -1,4 +1,5 @@
 import React from "react";
+import SpotlightWordmark from "./SpotlightWordmark";
 import { displayFont } from "./tokens";
 
 export default function FooterV2() {
@@ -48,12 +49,7 @@ export default function FooterV2() {
         </div>
       </div>
       <div style={{ maxWidth: 1680, margin: "0 auto", width: "100%", paddingTop: "clamp(10px,2vh,26px)" }}>
-        <span
-          data-wordmark="1"
-          style={{ display: "block", fontFamily: displayFont, fontWeight: 700, fontSize: "19.4vw", lineHeight: 0.78, letterSpacing: "-.055em", color: "rgba(250,250,250,.1)", whiteSpace: "nowrap", userSelect: "none" }}
-        >
-          ABSTRAKT
-        </span>
+        <SpotlightWordmark />
       </div>
     </footer>
   );

@@ -17,16 +17,16 @@ export default function TestimonialsV2({ data }: TestimonialsV2Props) {
   if (quotes.length === 0) return null;
 
   return (
-    <section data-screen-label="Testimonials" style={{ padding: "clamp(60px,9vh,110px) 0", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)", display: "grid", gridTemplateColumns: "minmax(0,.85fr) minmax(0,1.6fr)", gap: "clamp(24px,4vw,64px)", alignItems: "center" }}>
+    <section data-reveal="1" data-depth="1" data-screen-label="Testimonials" style={{ padding: "clamp(60px,9vh,110px) 0", overflow: "hidden" }}>
+      <div data-depth-inner="1" style={{ maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)", display: "grid", gridTemplateColumns: "minmax(0,.85fr) minmax(0,1.6fr)", gap: "clamp(24px,4vw,64px)", alignItems: "center" }}>
         <div>
-          <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, marginBottom: 14 }}>
+          <span data-rv="eyebrow" style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, marginBottom: 14 }}>
             (06) CLIENTS
           </span>
           <h2 style={{ margin: "0 0 26px", fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(30px,4.4vw,64px)", lineHeight: 0.98, letterSpacing: "-.04em", maxWidth: "16ch" }}>
-            Rating and reviews, in their words
+            <span data-rv="line"><span>Rating and reviews, in their words</span></span>
           </h2>
-          <div style={{ display: "flex", gap: 12 }}>
+          <div data-rv="up" style={{ ["--rv-i" as string]: 2, display: "flex", gap: 12 }}>
             <button
               type="button"
               data-action="prev-quote"
@@ -45,7 +45,7 @@ export default function TestimonialsV2({ data }: TestimonialsV2Props) {
             </button>
           </div>
         </div>
-        <div data-drag-zone="1" style={{ position: "relative", width: "100%", height: 480, overflow: "hidden", touchAction: "pan-y" }}>
+        <div data-rv="up" data-drag-zone="1" style={{ ["--rv-i" as string]: 3, position: "relative", width: "100%", height: 480, overflow: "hidden", touchAction: "pan-y" }}>
           {quotes.map((t, i) => {
             const dark = t.theme === "dark";
             return (

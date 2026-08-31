@@ -66,10 +66,10 @@ export const capabilitiesContent = {
 
 export const workContent = {
   projects: [
-    { id: 1, title: "Zuus x Shake Shaq", subtitle: "Cold-pressed juice x milkshake collab campaign", category: "Campaign", image: "/images/zuus-shakeshaq-campaign.jpg" },
+    { id: 1, title: "Zuus x Shake Shaq", subtitle: "Cold-pressed juice x milkshake collab campaign", category: "Campaign", image: "/images/zuus-shakeshaq-campaign.png" },
     { id: 2, title: "Serena Moon", subtitle: "Private digital exhibition & membership site", category: "Digital", image: "/images/serena-moon-website.png" },
     { id: 3, title: "Arbitrary", subtitle: "Music platform — records, events, artists", category: "Digital", image: "/images/arbitrary-website.png" },
-    { id: 4, title: "Zuus x Shake Shaq", subtitle: "Cold-pressed juice x milkshake collab campaign", category: "Campaign", image: "/images/zuus-shakeshaq-campaign.jpg" },
+    { id: 4, title: "Zuus x Shake Shaq", subtitle: "Cold-pressed juice x milkshake collab campaign", category: "Campaign", image: "/images/zuus-shakeshaq-campaign.png" },
     { id: 5, title: "Serena Moon", subtitle: "Private digital exhibition & membership site", category: "Digital", image: "/images/serena-moon-website.png" },
   ],
 };

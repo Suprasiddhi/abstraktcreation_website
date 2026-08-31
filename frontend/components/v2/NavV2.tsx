@@ -1,27 +1,125 @@
-import React from "react";
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { displayFont } from "./tokens";
+import { getLenis } from "../../lib/v2/useLenis";
+import MenuFieldCanvas from "./MenuFieldCanvas";
+import SidebarMenuV2 from "./SidebarMenuV2";
+import { NAV_LINKS, SOCIALS, STUDIOS, CONTACTS } from "./menuData";
+import "./menu-overlay.css";
 
-const NAV_LINKS = [
-  { label: "Work", href: "#work" },
-  { label: "Capabilities", href: "#capabilities" },
-  { label: "Studio", href: "#studio" },
-  { label: "Careers", href: "#careers" },
-  { label: "Contact", href: "#contact" },
-];
+export type MenuVariant = "overlay" | "sidebar";
 
-export default function NavV2() {
+/**
+ * Which open-menu treatment ships. Both directions are mounted behind this
+ * switch while they are compared — the same "keep both, cut one before
+ * launch" arrangement CapabilitiesV2 / CapabilitiesAltV2 use on the page.
+ * Append `?menu=overlay` or `?menu=sidebar` to compare without editing code.
+ */
+const DEFAULT_MENU_VARIANT: MenuVariant = "sidebar";
+
+export default function NavV2({ variant }: { variant?: MenuVariant }) {
+  const [menuVariant, setMenuVariant] = useState<MenuVariant>(variant ?? DEFAULT_MENU_VARIANT);
+
+  // Read after mount rather than during render so the server and client agree
+  // on the first paint.
+  useEffect(() => {
+    if (variant) return;
+    const q = new URLSearchParams(window.location.search).get("menu");
+    if (q === "overlay" || q === "sidebar") setMenuVariant(q);
+  }, [variant]);
+
+  // The overlay used to be toggled imperatively from useAbstraktMotion. It now
+  // owns its open state in React so the backdrop canvas can be started and
+  // stopped with it; the hook reads `data-menu-open` off <html> for the one
+  // thing it still needs to know (stand down the scroll-direction nav hide).
+  const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const everOpened = useRef(false);
+
+  // The overlay covers the bar but the bar stays focusable behind it, so hand
+  // focus over on open and take it back on close.
+  useEffect(() => {
+    if (open) {
+      everOpened.current = true;
+      closeRef.current?.focus({ preventScroll: true });
+    } else if (everOpened.current) {
+      toggleRef.current?.focus({ preventScroll: true });
+    }
+  }, [open]);
+
+  useEffect(() => {
+    document.documentElement.dataset.menuOpen = open ? "1" : "0";
+    document.body.style.overflow = open ? "hidden" : "";
+    // Lenis keeps easing the real scroll position otherwise, and a fixed
+    // overlay ends up fighting a scroll it cannot see.
+    const lenis = getLenis();
+    if (open) lenis?.stop();
+    else lenis?.start();
+  }, [open]);
+
+  useEffect(
+    () => () => {
+      delete document.documentElement.dataset.menuOpen;
+      document.body.style.overflow = "";
+      getLenis()?.start();
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const closeMenu = useCallback(() => setOpen(false), []);
+
+  const goTo = useCallback((href: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = document.querySelector<HTMLElement>(href);
+    setOpen(false);
+    if (!target) return;
+    e.preventDefault();
+    const lenis = getLenis();
+    // The effect above restarts Lenis, but it has not run yet at this point —
+    // restart it here so the scroll issued on the next frame actually lands.
+    lenis?.start();
+    requestAnimationFrame(() => {
+      if (lenis) lenis.scrollTo(target);
+      else target.scrollIntoView({ behavior: "smooth" });
+    });
+  }, []);
+
+  // The overlay variant paints over the bar, but the sidebar's field is
+  // frosted glass — the bar would show through it, and its wordmark sits
+  // almost exactly under the field's watermark. Fade it out instead; the
+  // watermark stands in for it while the menu is open.
+  const hideBar = open && menuVariant === "sidebar";
+
   return (
     <>
       <div
         data-nav="1"
+        inert={hideBar}
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          mixBlendMode: "difference",
-          transition: "transform .55s cubic-bezier(.22,1,.36,1)",
+          opacity: hideBar ? 0 : 1,
+          pointerEvents: hideBar ? "none" : undefined,
+          // Was mix-blend-mode: difference, which inverts against whatever is
+          // behind it. That reads fine over flat cream and falls apart over
+          // photography — the hero parallax and the Works carousel both left
+          // the wordmark and pills half-legible. The tone is now switched
+          // explicitly per section by useAbstraktMotion, which reads
+          // [data-nav-tone] and sets these variables.
+          transition: "transform .55s cubic-bezier(.22,1,.36,1), color .3s ease, opacity .35s ease",
           willChange: "transform",
         }}
       >
@@ -43,7 +141,8 @@ export default function NavV2() {
               fontWeight: 700,
               fontSize: "clamp(18px,2vw,23px)",
               letterSpacing: "-.03em",
-              color: "#ffffff",
+              color: "var(--nav-fg,#0E0E0E)",
+              transition: "color .3s ease",
               lineHeight: 1,
             }}
           >
@@ -58,8 +157,9 @@ export default function NavV2() {
                 height: 42,
                 padding: "0 20px",
                 borderRadius: 999,
-                background: "#ffffff",
-                color: "#000000",
+                background: "var(--nav-pill-bg,#0E0E0E)",
+                color: "var(--nav-pill-fg,#F7F6F3)",
+                transition: "background .3s ease, color .3s ease",
                 fontSize: 13,
                 fontWeight: 700,
                 letterSpacing: ".01em",
@@ -70,7 +170,10 @@ export default function NavV2() {
             </a>
             <button
               type="button"
-              data-action="toggle-menu"
+              ref={toggleRef}
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="menu-overlay"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -78,8 +181,9 @@ export default function NavV2() {
                 height: 42,
                 padding: "0 18px",
                 borderRadius: 999,
-                background: "#ffffff",
-                color: "#000000",
+                background: "var(--nav-pill-bg,#0E0E0E)",
+                color: "var(--nav-pill-fg,#F7F6F3)",
+                transition: "background .3s ease, color .3s ease",
                 border: 0,
                 fontSize: 13,
                 fontWeight: 700,
@@ -87,8 +191,8 @@ export default function NavV2() {
               }}
             >
               <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ display: "block", width: 15, height: 1.6, background: "#000000" }} />
-                <span style={{ display: "block", width: 15, height: 1.6, background: "#000000" }} />
+                <span style={{ display: "block", width: 15, height: 1.6, background: "var(--nav-pill-fg,#F7F6F3)" }} />
+                <span style={{ display: "block", width: 15, height: 1.6, background: "var(--nav-pill-fg,#F7F6F3)" }} />
               </span>
               <span>Menu</span>
             </button>
@@ -96,125 +200,101 @@ export default function NavV2() {
         </div>
       </div>
 
-      <div
-        data-menu="1"
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 150,
-          background: "#0E0E0E",
-          color: "#F7F6F3",
-          transform: "translate3d(0,-101%,0)",
-          transition: "transform .72s cubic-bezier(.76,0,.24,1)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "20px clamp(18px,3.6vw,60px)",
-            maxWidth: 1680,
-            margin: "0 auto",
-            width: "100%",
-          }}
-        >
-          <span style={{ fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(18px,2vw,23px)", letterSpacing: "-.03em" }}>
-            ABSTRAKT<span style={{ color: "#9A78F5" }}>.</span>
+      {menuVariant === "sidebar" ? (
+        <SidebarMenuV2 open={open} onClose={closeMenu} onNavigate={goTo} closeRef={closeRef} />
+      ) : (
+      <div id="menu-overlay" className="mv2" data-menu="1" data-open={open ? "1" : "0"} aria-hidden={!open} inert={!open}>
+        <MenuFieldCanvas className="mv2__canvas" active={open} />
+        <div className="mv2__glow" />
+        <div className="mv2__scrim" />
+        <div className="mv2__scrim mv2__scrim--bottom" />
+
+        <div className="mv2__rail">
+          <span className="mv2__rail-line" />
+          <span className="mv2__rail-text" lang="ne">
+            ललितपुर — नेपाल
           </span>
-          <button
-            type="button"
-            data-action="close-menu"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              height: 42,
-              padding: "0 18px",
-              borderRadius: 999,
-              background: "#F7F6F3",
-              color: "#0E0E0E",
-              border: 0,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            <span style={{ position: "relative", width: 14, height: 14, display: "block" }}>
-              <span style={{ position: "absolute", top: 6, left: 0, width: 14, height: 1.6, background: "#0E0E0E", transform: "rotate(45deg)" }} />
-              <span style={{ position: "absolute", top: 6, left: 0, width: 14, height: 1.6, background: "#0E0E0E", transform: "rotate(-45deg)" }} />
-            </span>
-            <span>Close</span>
-          </button>
+          <span className="mv2__rail-line mv2__rail-line--down" />
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: "grid",
-            gridTemplateColumns: "minmax(0,1.35fr) minmax(0,1fr)",
-            gap: "clamp(24px,5vw,80px)",
-            alignItems: "end",
-            padding: "0 clamp(18px,3.6vw,60px) clamp(36px,6vh,72px)",
-            maxWidth: 1680,
-            margin: "0 auto",
-            width: "100%",
-          }}
-        >
-          <nav style={{ display: "flex", flexDirection: "column" }}>
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                data-mi="1"
-                data-action="close-menu"
-                href={link.href}
-                style={{
-                  fontFamily: displayFont,
-                  fontWeight: 700,
-                  fontSize: "clamp(38px,7.4vw,104px)",
-                  lineHeight: 1.02,
-                  letterSpacing: "-.035em",
-                  color: "#F7F6F3",
-                  padding: "2px 0",
-                  transform: "translate3d(0,110%,0)",
-                  transition: "transform .7s cubic-bezier(.22,1,.36,1),color .25s",
-                }}
-              >
-                {link.label}
-              </a>
+
+        <div className="mv2__head">
+          <span className="mv2__wordmark">
+            ABSTRAKT<span className="mv2__wordmark-dot">.</span>
+          </span>
+          <div className="mv2__head-actions">
+            <a className="mv2__cta" href="#contact" onClick={goTo("#contact")}>
+              <span>Start a project</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h13" />
+                <path d="M12 6l6 6-6 6" />
+              </svg>
+            </a>
+            <button type="button" ref={closeRef} className="mv2__close" onClick={() => setOpen(false)}>
+              <span className="mv2__close-glyph">
+                <span />
+                <span />
+              </span>
+              <span>Close</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mv2__body">
+          <nav className="mv2__nav" aria-label="Primary">
+            {NAV_LINKS.map((link, i) => (
+              <span className="mv2__line" key={link.label}>
+                <a
+                  className="mv2__link"
+                  href={link.href}
+                  onClick={goTo(link.href)}
+                  style={{ transitionDelay: open ? `${(0.14 + i * 0.06).toFixed(2)}s` : "0s" }}
+                >
+                  {/* Two stacked copies rolled by 50% on hover — the second one
+                      carries the accent colour. */}
+                  <span className="mv2__roll">
+                    <span className="mv2__word">{link.label}</span>
+                    <span className="mv2__word mv2__word--accent">{link.label}</span>
+                  </span>
+                </a>
+              </span>
             ))}
           </nav>
-          <div style={{ display: "flex", flexDirection: "column", gap: 26, paddingBottom: 14 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#5C5C5C" }}>STUDIOS</span>
-              <span style={{ fontSize: 15, color: "#C9C9C4", lineHeight: 1.6 }}>
-                Sanepa, Lalitpur, Nepal
-                <br />
-                3620 Adelaide, The Colony, TX
+
+          <div className="mv2__meta">
+            <div className="mv2__meta-group">
+              <span className="mv2__meta-label">STUDIOS</span>
+              <span className="mv2__meta-text">
+                {STUDIOS.map((line, i) => (
+                  <React.Fragment key={line}>
+                    {i > 0 && <br />}
+                    {line}
+                  </React.Fragment>
+                ))}
               </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#5C5C5C" }}>DIRECT</span>
-              <a href="mailto:abstraktcreation@gmail.com" style={{ fontSize: 15, color: "#F7F6F3" }}>
-                abstraktcreation@gmail.com
-              </a>
-              <a href="tel:+9779823901866" style={{ fontSize: 15, color: "#C9C9C4" }}>
-                +977 9823901866
-              </a>
-              <a href="tel:+18173309194" style={{ fontSize: 15, color: "#C9C9C4" }}>
-                +1 (817) 330-9194
-              </a>
+            <div className="mv2__meta-group">
+              <span className="mv2__meta-label">DIRECT</span>
+              {CONTACTS.map((c) => (
+                <a
+                  key={c.href}
+                  className={c.strong ? "mv2__meta-link mv2__meta-link--strong" : "mv2__meta-link"}
+                  href={c.href}
+                >
+                  {c.label}
+                </a>
+              ))}
             </div>
-            <div style={{ display: "flex", gap: 16, fontSize: 13, fontWeight: 600 }}>
-              <a href="https://instagram.com" style={{ color: "#C9C9C4" }}>Instagram</a>
-              <a href="https://linkedin.com" style={{ color: "#C9C9C4" }}>LinkedIn</a>
-              <a href="https://facebook.com" style={{ color: "#C9C9C4" }}>Facebook</a>
+            <div className="mv2__socials">
+              {SOCIALS.map((s) => (
+                <a key={s.label} className="mv2__social" href={s.href} aria-label={s.label} target="_blank" rel="noreferrer">
+                  {s.icon}
+                </a>
+              ))}
             </div>
           </div>
         </div>
       </div>
+      )}
     </>
   );
 }

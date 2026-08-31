@@ -1,0 +1,377 @@
+/* ---------------------------------------------------------------
+   Menu sidebar
+   Port of the Claude Design artboard `menu-sidebar.dc.html`.
+
+   A variant of the open menu: instead of the full-screen panel in
+   menu-overlay.css, a right-hand rail carries the nav while the page
+   stays visible — blurred — in the open area to its left.
+
+   Deliberate differences from the artboard:
+   - The artboard previews permanently open, so it has no enter/exit.
+     Everything here keys off `[data-open="1"]` on the root.
+   - Hover states the artboard expressed with its `style-hover`
+     attribute are real CSS rules, so they work without the design
+     runtime.
+   - Colours and fonts are declared once as custom properties below
+     rather than repeated inline, so they retune in one place and
+     pick up the v2 font variables from app/home-v2/layout.tsx.
+   - The artboard's animated wave field and purple glow are gone; the
+     area beside the rail is frosted glass over the live page. See the
+     "Open area" section for why.
+   --------------------------------------------------------------- */
+
+.ms2 {
+  /* Mirrors tokens.ts — INK, BG, BRAND, BRAND_LIGHT. */
+  --ms-ink: #0e0e0e;
+  --ms-bg: #f7f6f3;
+  --ms-brand: #501ebd;
+  --ms-brand-light: #9a78f5;
+  /* Artboard-specific tones with no tokens.ts equivalent. */
+  --ms-panel: #17171b;
+  --ms-muted: #c9c9c4;
+  --ms-label: #5c5c5c;
+  --ms-brand-hover: #6e36e0;
+  --ms-hairline: rgba(247, 246, 243, 0.09);
+
+  --ms-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ms-ease-inout: cubic-bezier(0.76, 0, 0.24, 1);
+
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  z-index: 150;
+  color: var(--ms-bg);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  display: flex;
+  overflow: hidden;
+
+  /* The blur lives here, on the full-viewport root, not on .ms2__field.
+     The panel below slides in via `transform`, which never affects
+     layout — its flex slot is reserved at full size from the very first
+     frame, mid-slide included. A blur painted only on the field (the
+     flex sibling *outside* that reserved slot) left that slot showing
+     raw, un-blurred page for the entire animation: a sharp rectangular
+     hole racing the panel across the screen. Backdrop-filter on the
+     root instead covers the whole fixed area at all times — including
+     the space the panel is about to slide into — so there is nothing
+     left for the panel to uncover. No colour wash: this is blur only,
+     the page's own colours show through unchanged. */
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+
+  /* Kept out of the tab order while closed; delayed so it only goes
+     hidden after the panel has finished sliding away. */
+  visibility: hidden;
+  transition: visibility 0s linear 0.72s, -webkit-backdrop-filter 0.72s var(--ms-ease-inout),
+    backdrop-filter 0.72s var(--ms-ease-inout);
+}
+
+.ms2[data-open="1"] {
+  visibility: visible;
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  transition: visibility 0s linear 0s, -webkit-backdrop-filter 0.72s var(--ms-ease-inout),
+    backdrop-filter 0.72s var(--ms-ease-inout);
+}
+
+.ms2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- Open area beside the panel ----------
+   Blur, no colour, over the live page — not the artboard's animated
+   wave field.
+
+   A sidebar that blacks out everything to its left stops being a
+   sidebar — it is a full takeover wearing a rail. Blurring the live
+   page instead keeps the reader's place on screen: they can still see
+   roughly where they were, so the rail reads as a layer on top of the
+   site rather than a different screen.
+
+   The blur itself is painted on the root (see `.ms2` above), not here
+   — this element is a plain, unstyled flex spacer that exists only to
+   size the click-to-dismiss zone to "everything left of the panel" and
+   host the dimmed wordmark. Layering a second background/blur on top
+   of the root's would be pure redundancy.
+
+   The area doubles as the click target that dismisses the menu, which
+   a permanently-open artboard has no way to express. */
+
+.ms2__field {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  padding: 26px clamp(20px, 3vw, 44px);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+/* Ink-toned now that it sits on the blurred page rather than charcoal. */
+.ms2__mark {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 23px);
+  letter-spacing: -0.03em;
+  color: rgba(14, 14, 14, 0.3);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.ms2__mark-dot {
+  color: rgba(80, 30, 189, 0.42);
+}
+
+/* ---------- Panel ---------- */
+
+.ms2__panel {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  width: clamp(320px, 30vw, 460px);
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--ms-panel);
+  border-left: 1px solid var(--ms-hairline);
+  /* Lighter than the artboard's -30px/0.85: that was tuned against an
+     opaque charcoal ground, and over frosted cream it read as a smear. */
+  box-shadow: -30px 0 70px -34px rgba(14, 14, 14, 0.5);
+  padding: 26px clamp(24px, 2.4vw, 38px) clamp(24px, 3vh, 36px);
+  transform: translate3d(101%, 0, 0);
+  transition: transform 0.72s var(--ms-ease-inout);
+  will-change: transform;
+}
+
+.ms2[data-open="1"] .ms2__panel {
+  transform: translate3d(0, 0, 0);
+}
+
+.ms2__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ms2__wordmark {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: clamp(17px, 1.5vw, 21px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.ms2__wordmark-dot {
+  color: var(--ms-brand-light);
+}
+
+.ms2__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(247, 246, 243, 0.06);
+  border: 1px solid rgba(247, 246, 243, 0.14);
+  color: var(--ms-muted);
+  cursor: pointer;
+  transition: background 0.4s var(--ms-ease), color 0.4s ease, border-color 0.4s ease;
+}
+
+.ms2__close:hover,
+.ms2__close:focus-visible {
+  background: var(--ms-brand);
+  border-color: var(--ms-brand);
+  color: #ffffff;
+}
+
+/* ---------- Nav ---------- */
+
+.ms2__nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, min(3.4vw, 5.8vh), 52px);
+  letter-spacing: -0.03em;
+}
+
+.ms2__link {
+  display: block;
+  height: 1.06em;
+  overflow: hidden;
+  color: var(--ms-bg);
+  /* Staggered in behind the panel; the per-link delay is set inline so
+     it only applies while opening. */
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 0.5s ease, transform 0.6s var(--ms-ease);
+}
+
+.ms2[data-open="1"] .ms2__link {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Two stacked copies rolled by 50% on hover — the second one carries
+   the accent colour. */
+.ms2__roll {
+  display: block;
+  transform: translate3d(0, var(--roll, 0%), 0);
+  transition: transform 0.6s var(--ms-ease);
+  will-change: transform;
+}
+
+.ms2__link:hover .ms2__roll,
+.ms2__link:focus-visible .ms2__roll {
+  --roll: -50%;
+}
+
+.ms2__word {
+  display: block;
+  height: 1.06em;
+  line-height: 1.06em;
+}
+
+.ms2__word--accent {
+  color: var(--ms-brand-light);
+}
+
+/* ---------- CTA ---------- */
+
+.ms2__cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 54px;
+  padding: 0 8px 0 22px;
+  border-radius: 999px;
+  background: var(--ms-brand);
+  color: var(--ms-bg);
+  font-size: 14px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  transition: background 0.45s var(--ms-ease);
+}
+
+.ms2__cta:hover,
+.ms2__cta:focus-visible {
+  background: var(--ms-brand-hover);
+  color: var(--ms-bg);
+}
+
+.ms2__cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(247, 246, 243, 0.14);
+}
+
+/* ---------- Contact ---------- */
+
+.ms2__rule {
+  height: 1px;
+  background: var(--ms-hairline);
+  margin: clamp(18px, 2.6vh, 28px) 0;
+  flex: 0 0 auto;
+}
+
+.ms2__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.ms2__meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: var(--ms-label);
+}
+
+.ms2__meta-link {
+  font-size: 15px;
+  color: var(--ms-muted);
+  transition: color 0.35s ease;
+}
+
+.ms2__meta-link--strong {
+  color: var(--ms-bg);
+}
+
+.ms2__meta-link:hover,
+.ms2__meta-link:focus-visible {
+  color: var(--ms-brand-light);
+}
+
+/* ---------- Socials ---------- */
+
+.ms2__socials {
+  display: flex;
+  gap: 10px;
+  margin-top: clamp(16px, 2.4vh, 24px);
+  flex: 0 0 auto;
+}
+
+.ms2__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 246, 243, 0.16);
+  background: rgba(247, 246, 243, 0.04);
+  color: var(--ms-muted);
+  transition: background 0.45s var(--ms-ease), border-color 0.45s ease, color 0.45s ease;
+}
+
+.ms2__social:hover,
+.ms2__social:focus-visible {
+  background: var(--ms-brand);
+  border-color: var(--ms-brand);
+  color: #ffffff;
+}
+
+/* ---------- Narrow screens ----------
+   The artboard is authored at 1440×800 and its panel is a fixed rail.
+   Below the canvas breakpoint the rail would leave almost no field
+   beside it, so it takes the full width and the dimmed wordmark goes. */
+
+@media (max-width: 640px) {
+  .ms2__panel {
+    width: 100%;
+    border-left: 0;
+  }
+
+  .ms2__field {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms2,
+  .ms2__panel,
+  .ms2__link,
+  .ms2__roll {
+    transition-duration: 0.01ms;
+  }
+}

@@ -19,30 +19,12 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
     const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
     const cleanups: Array<() => void> = [];
-    let menuOpen = false;
 
     // ---------- Menu ----------
-    const setMenu = (open: boolean) => {
-      const menu = q<HTMLElement>("[data-menu]");
-      if (!menu) return;
-      menuOpen = open;
-      menu.style.transform = open ? "translate3d(0,0,0)" : "translate3d(0,-101%,0)";
-      document.body.style.overflow = open ? "hidden" : "";
-      qa<HTMLElement>("[data-mi]").forEach((a, i) => {
-        a.style.transitionDelay = (open ? 0.14 + i * 0.06 : 0) + "s";
-        a.style.transform = open ? "translate3d(0,0,0)" : "translate3d(0,110%,0)";
-      });
-    };
-    qa<HTMLElement>('[data-action="toggle-menu"]').forEach((btn) => {
-      const handler = () => setMenu(!menuOpen);
-      btn.addEventListener("click", handler);
-      cleanups.push(() => btn.removeEventListener("click", handler));
-    });
-    qa<HTMLElement>('[data-action="close-menu"]').forEach((btn) => {
-      const handler = () => setMenu(false);
-      btn.addEventListener("click", handler);
-      cleanups.push(() => btn.removeEventListener("click", handler));
-    });
+    // NavV2 owns the overlay's open state in React and flags it on <html>.
+    // The only thing left for this hook is to stand the scroll-direction nav
+    // hide down while the overlay is covering the bar.
+    const menuIsOpen = () => document.documentElement.dataset.menuOpen === "1";
 
     // ---------- Person bio reveal ----------
     qa<HTMLElement>('[data-action="toggle-person"]').forEach((btn) => {
@@ -272,10 +254,36 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
     }
 
     // ---------- Scroll-driven motion ----------
+    // The hero's own motion lives in ParallaxLayersV2 (GSAP/ScrollTrigger),
+    // not here — this pass covers the sections below it.
     const nav = q<HTMLElement>("[data-nav]");
-    const heroSec = q<HTMLElement>("[data-hero-sec]");
-    const media = q<HTMLElement>("[data-hero-media]");
-    const heroHead = q<HTMLElement>("[data-hero-head]");
+
+    // Sections that sit under the nav as dark or photographic ground. Anything
+    // unmarked is treated as the page's cream default.
+    const toneSections = qa<HTMLElement>("[data-nav-tone]");
+    // Sampled at the nav's own vertical midline rather than the viewport top,
+    // so the swap lands as the bar crosses the boundary, not before it.
+    const NAV_MIDLINE = 46;
+    let lastTone = "";
+
+    const applyTone = () => {
+      if (!nav) return;
+      let tone = "light";
+      for (const section of toneSections) {
+        const r = section.getBoundingClientRect();
+        if (r.top <= NAV_MIDLINE && r.bottom >= NAV_MIDLINE) {
+          tone = section.dataset.navTone || "light";
+          break;
+        }
+      }
+      if (tone === lastTone) return;
+      lastTone = tone;
+      const dark = tone === "dark";
+      nav.style.setProperty("--nav-fg", dark ? "#F7F6F3" : "#0E0E0E");
+      nav.style.setProperty("--nav-pill-bg", dark ? "#F7F6F3" : "#0E0E0E");
+      nav.style.setProperty("--nav-pill-fg", dark ? "#0E0E0E" : "#F7F6F3");
+    };
+
     const revealSec = q<HTMLElement>("[data-reveal-sec]");
     const words = qa<HTMLElement>("[data-rw]");
     const workSec = q<HTMLElement>("[data-work-sec]");
@@ -298,7 +306,8 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
     const tick = () => {
       const y = window.scrollY;
       const vh = window.innerHeight;
-      if (nav && !menuOpen) {
+      applyTone();
+      if (nav && !menuIsOpen()) {
         if (y > lastY && y > 220) {
           if (!hidden) {
             nav.style.transform = "translate3d(0,-120%,0)";
@@ -311,18 +320,6 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
       }
       lastY = y;
 
-      if (heroSec && media) {
-        const p = prog(heroSec);
-        const grow = clamp(p / 0.42, 0, 1);
-        media.style.width = 66 + 34 * grow + "vw";
-        media.style.borderRadius = 22 * (1 - grow) + "px";
-        media.style.transform = "scale(" + (1 + 0.12 * clamp((p - 0.46) / 0.54, 0, 1)) + ")";
-      }
-      if (heroHead) {
-        const t = clamp(y / (vh * 0.85), 0, 1);
-        heroHead.style.transform = "translate3d(0," + -90 * t + "px,0)";
-        heroHead.style.opacity = String(1 - t * 0.9);
-      }
       if (revealSec && words.length) {
         const p = prog(revealSec) * 1.18;
         const n = words.length;

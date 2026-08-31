@@ -1,6 +1,14 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import PlaceholderSlot from "./PlaceholderSlot";
 import { displayFont } from "./tokens";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 interface MemberData {
   name: string;
@@ -14,11 +22,51 @@ interface StudioV2Props {
 
 export default function StudioV2({ data }: StudioV2Props) {
   const team = data?.team || [];
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Port of the Codrops OnScrollLayoutFormations "data-grid-second" effect:
+  // cards fly up from below the viewport, fanned outward from center — left
+  // cards rotate positive, right cards negative, scaled by distance from
+  // center — scrubbed as the section scrolls into view (no pin).
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const cards = section.querySelectorAll<HTMLElement>("[data-studio-card]");
+    if (!cards.length) return;
+
+    const ctx = gsap.context(() => {
+      const middleIndex = Math.floor(cards.length / 2);
+      gsap
+        .timeline({
+          defaults: { ease: "power3" },
+          scrollTrigger: {
+            trigger: section,
+            start: "top bottom",
+            end: "center center",
+            scrub: 0.5,
+          },
+        })
+        .from(cards, {
+          stagger: { amount: 0.3, from: "center" },
+          y: () => window.innerHeight,
+          transformOrigin: "50% 0%",
+          rotation: (pos: number) => {
+            const distanceFromCenter = Math.abs(pos - middleIndex);
+            return pos < middleIndex ? distanceFromCenter * 3 : distanceFromCenter * -3;
+          },
+        });
+    }, section);
+
+    return () => ctx.revert();
+  }, [team]);
+
   if (team.length === 0) return null;
 
   return (
-    <section id="studio" data-screen-label="People" style={{ position: "relative", padding: "clamp(60px,9vh,110px) 0", background: "#EAE9E4", scrollMarginTop: 80, overflow: "hidden" }}>
-      <div style={{ position: "relative", maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)" }}>
+    <section ref={sectionRef} id="studio" data-reveal="1" data-depth="1" data-screen-label="People" style={{ position: "relative", padding: "clamp(60px,9vh,110px) 0", background: "#EAE9E4", scrollMarginTop: 80, overflow: "hidden" }}>
+      <div data-depth-inner="1" style={{ position: "relative", maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)" }}>
         <div
           style={{
             display: "flex",
@@ -32,19 +80,23 @@ export default function StudioV2({ data }: StudioV2Props) {
           }}
         >
           <div>
-            <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#8B8A84", marginBottom: 14 }}>
+            <span data-rv="eyebrow" style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#8B8A84", marginBottom: 14 }}>
               (05) THE PEOPLE
             </span>
             <h2 style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(32px,5.2vw,78px)", lineHeight: 0.94, letterSpacing: "-.04em" }}>
-              Who you actually work with
+              <span data-rv="line"><span>Who you actually work with</span></span>
             </h2>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".16em", color: "#8B8A84", paddingBottom: 8 }}>TAP + TO READ</span>
+          <span data-rv="eyebrow" style={{ ["--rv-i" as string]: 2, fontSize: 12, fontWeight: 600, letterSpacing: ".16em", color: "#8B8A84", paddingBottom: 8 }}>TAP + TO READ</span>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "clamp(14px,1.6vw,24px)" }}>
           {team.map((member, i) => (
-            <PersonCard key={i} member={member} />
+            <div key={i}>
+              <div data-studio-card="1">
+                <PersonCard member={member} />
+              </div>
+            </div>
           ))}
         </div>
       </div>

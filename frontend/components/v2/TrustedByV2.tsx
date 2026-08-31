@@ -1,6 +1,6 @@
 import React from "react";
-import PlaceholderSlot from "./PlaceholderSlot";
-import { LINE, MUTED } from "./tokens";
+import InfiniteMover from "./InfiniteMover";
+import { MUTED } from "./tokens";
 
 interface LogoItem {
   id?: number;
@@ -12,24 +12,53 @@ interface TrustedByV2Props {
   data?: LogoItem[];
 }
 
+// One full set per copy; the InfiniteMover renders the set five times, and
+// the set itself must out-width the viewport for the loop to stay covered.
+const MIN_TILES_PER_SET = 10;
+const TILE_GAP = "clamp(12px,1.4vw,20px)";
+
+function buildSet(items: LogoItem[]): LogoItem[] {
+  if (!items.length) return [];
+  const set: LogoItem[] = [];
+  while (set.length < MIN_TILES_PER_SET) set.push(...items);
+  return set;
+}
+
 function LogoTile({ logo }: { logo: LogoItem }) {
   return (
     <div
+      className="ab-logo-tile"
       style={{
         flex: "0 0 auto",
         position: "relative",
-        width: "clamp(150px,15vw,224px)",
-        height: "clamp(76px,7vw,104px)",
-        borderRadius: 14,
-        background: "#EFEEE9",
-        border: `1px solid ${LINE}`,
-        overflow: "hidden",
+        width: "clamp(128px,13vw,170px)",
+        height: "clamp(66px,6.2vw,88px)",
+        marginRight: TILE_GAP,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {logo.imageUrl ? (
-        <img src={logo.imageUrl} alt={logo.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", padding: 14 }} />
+        <img
+          src={logo.imageUrl}
+          alt={logo.name}
+          style={{ maxWidth: "68%", maxHeight: "58%", width: "auto", height: "auto", objectFit: "contain", display: "block" }}
+        />
       ) : (
-        <PlaceholderSlot label={logo.name || "Client logo"} tone="light" />
+        <span
+          style={{
+            fontSize: "clamp(11px,1vw,13px)",
+            fontWeight: 700,
+            letterSpacing: ".18em",
+            textTransform: "uppercase",
+            color: "#6F6E68",
+            textAlign: "center",
+            padding: "0 10px",
+          }}
+        >
+          {logo.name}
+        </span>
       )}
     </div>
   );
@@ -39,29 +68,40 @@ export default function TrustedByV2({ data }: TrustedByV2Props) {
   const logos = data && data.length ? data : [];
   if (logos.length === 0) return null;
 
-  const mid = Math.ceil(logos.length / 2);
-  const rowA = logos.slice(0, mid).length ? logos.slice(0, mid) : logos;
-  const rowB = logos.slice(mid).length ? logos.slice(mid) : logos;
-  const loopedA = [...rowA, ...rowA];
-  const loopedB = [...rowB, ...rowB];
+  // Both rows carry the full set so they're equally dense; the second is
+  // rotated so the rows don't read as mirrored.
+  const rotate = Math.floor(logos.length / 2);
+  const setA = buildSet(logos);
+  const setB = buildSet([...logos.slice(rotate), ...logos.slice(0, rotate)]);
 
   return (
-    <section style={{ padding: "clamp(26px,4vh,44px) 0", borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 clamp(18px,3.6vw,60px)", marginBottom: "clamp(18px,3vh,30px)" }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED }}>TRUSTED BY</span>
-        <span style={{ flex: 1, height: 1, background: LINE }} />
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED }}>NEPAL · US</span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "clamp(14px,2vw,22px)", overflow: "hidden" }}>
-        <div style={{ display: "flex", gap: "clamp(14px,2vw,22px)", width: "max-content", padding: "0 clamp(18px,3.6vw,60px)", animation: "abDriftA 46s ease-in-out infinite alternate" }}>
-          {loopedA.map((logo, i) => (
-            <LogoTile key={`a-${i}`} logo={logo} />
-          ))}
+    <section
+      data-reveal="1"
+      data-depth="1"
+      style={{ padding: "clamp(26px,4vh,44px) 0", overflow: "hidden" }}
+    >
+      <div data-depth-inner="1">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 clamp(18px,3.6vw,60px)", marginBottom: "clamp(18px,3vh,30px)" }}>
+          <span data-rv="eyebrow" style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, whiteSpace: "nowrap" }}>
+            TRUSTED BY
+          </span>
+          <span style={{ flex: 1 }} />
+          <span data-rv="eyebrow" style={{ ["--rv-i" as string]: 1, fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, whiteSpace: "nowrap" }}>
+            NEPAL · US
+          </span>
         </div>
-        <div style={{ display: "flex", gap: "clamp(14px,2vw,22px)", width: "max-content", padding: "0 clamp(18px,3.6vw,60px)", animation: "abDriftB 52s ease-in-out infinite alternate" }}>
-          {loopedB.map((logo, i) => (
-            <LogoTile key={`b-${i}`} logo={logo} />
-          ))}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "clamp(12px,1.4vw,20px)" }}>
+          <InfiniteMover move="RL" duration={48}>
+            {setA.map((logo, i) => (
+              <LogoTile key={`a-${i}`} logo={logo} />
+            ))}
+          </InfiniteMover>
+          <InfiniteMover move="LR" duration={62}>
+            {setB.map((logo, i) => (
+              <LogoTile key={`b-${i}`} logo={logo} />
+            ))}
+          </InfiniteMover>
         </div>
       </div>
     </section>

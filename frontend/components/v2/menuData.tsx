@@ -1,0 +1,63 @@
+/* ---------------------------------------------------------------
+   Shared menu content.
+
+   Lifted out of NavV2 so the full-screen overlay and the sidebar
+   variant render the same links, addresses, and socials — only the
+   presentation differs between them.
+   --------------------------------------------------------------- */
+
+import React from "react";
+
+export type NavLink = { label: string; href: string };
+
+export const NAV_LINKS: NavLink[] = [
+  { label: "Work", href: "#work" },
+  { label: "Capabilities", href: "#capabilities" },
+  { label: "Studio", href: "#studio" },
+  { label: "Careers", href: "#careers" },
+  { label: "Contact", href: "#contact" },
+];
+
+export const STUDIOS = ["Sanepa, Lalitpur, Nepal", "3620 Adelaide, The Colony, TX"];
+
+export type ContactLink = { label: string; href: string; strong?: boolean };
+
+export const CONTACTS: ContactLink[] = [
+  { label: "abstraktcreation@gmail.com", href: "mailto:abstraktcreation@gmail.com", strong: true },
+  { label: "+977 9823901866", href: "tel:+9779823901866" },
+  { label: "+1 (817) 330-9194", href: "tel:+18173309194" },
+];
+
+export type Social = { label: string; href: string; icon: React.ReactNode };
+
+export const SOCIALS: Social[] = [
+  {
+    label: "Instagram",
+    href: "https://instagram.com",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+        <rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4" />
+        <circle cx="12" cy="12" r="4.1" />
+        <circle cx="17.4" cy="6.6" r="1.15" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    label: "LinkedIn",
+    href: "https://linkedin.com",
+    icon: (
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Facebook",
+    href: "https://facebook.com",
+    icon: (
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 011.141.195v3.325a8.623 8.623 0 00-.653-.036 26.805 26.805 0 00-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 00-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647z" />
+      </svg>
+    ),
+  },
+];

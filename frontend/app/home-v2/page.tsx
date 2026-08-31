@@ -3,13 +3,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAbstraktMotion } from "../../lib/v2/useAbstraktMotion";
 import { useLenis } from "../../lib/v2/useLenis";
+import { useSectionReveal } from "../../lib/v2/useSectionReveal";
 import CustomCursor from "../../components/v2/CustomCursor";
 import NavV2 from "../../components/v2/NavV2";
+import ScrollProgressV2 from "../../components/v2/ScrollProgressV2";
 import HeroV2 from "../../components/v2/HeroV2";
 import PositionV2 from "../../components/v2/PositionV2";
 import TrustedByV2 from "../../components/v2/TrustedByV2";
 import StatsV2 from "../../components/v2/StatsV2";
 import CapabilitiesV2 from "../../components/v2/CapabilitiesV2";
+import CapabilitiesAltV2 from "../../components/v2/CapabilitiesAltV2";
+import CapabilitiesV3 from "../../components/v2/CapabilitiesV3";
+import WorksV2 from "../../components/v2/WorksV2";
 import SelectedWorkV2 from "../../components/v2/SelectedWorkV2";
 import ProcessV2 from "../../components/v2/ProcessV2";
 import StudioV2 from "../../components/v2/StudioV2";
@@ -59,7 +64,11 @@ export default function HomeV2() {
         if (data?.hero?.headlineLine1) setHero(data.hero);
         if (data?.position?.statement) setPosition(data.position);
         if (Array.isArray(data?.logos) && data.logos.length) setLogos(data.logos);
-        if (data?.capabilities?.pillars) setCapabilities(data.capabilities);
+        const cmsPillars = data?.capabilities?.pillars;
+        const pillarValues = Object.values(
+          (cmsPillars || {}) as Record<string, { title?: string; label?: string } | null>
+        );
+        if (pillarValues.some((p) => p?.title || p?.label)) setCapabilities(data.capabilities);
         if (Array.isArray(data?.process?.steps) && data.process.steps.length) setProcess(data.process);
         if (Array.isArray(data?.people?.team) && data.people.team.length) setPeople(data.people);
         if (Array.isArray(data?.faq?.questions) && data.faq.questions.length) {
@@ -73,12 +82,14 @@ export default function HomeV2() {
 
   useLenis();
   useAbstraktMotion(rootRef, [hero, position, logos, capabilities, process, people, faq]);
+  useSectionReveal(rootRef, [hero, position, logos, capabilities, process, people, faq]);
 
   const hiringTeam = people.team.slice(0, 2);
 
   return (
     <div ref={rootRef} style={{ width: "100%", overflowX: "clip" }}>
       <CustomCursor />
+      <ScrollProgressV2 />
       <NavV2 />
       <main id="top" data-screen-label="Home" style={{ width: "100%", overflow: "clip" }}>
         <HeroV2 data={hero} />
@@ -86,7 +97,12 @@ export default function HomeV2() {
         <TrustedByV2 data={logos} />
         <StatsV2 data={statsContent} />
         <CapabilitiesV2 data={capabilities} />
-        <SelectedWorkV2 data={workContent} />
+        {/* Alternate treatment of the same pillars, mounted directly below for
+            comparison. One of the two comes out before launch. */}
+        <CapabilitiesAltV2 data={capabilities} />
+        <CapabilitiesV3 data={capabilities} />
+        <WorksV2 data={workContent} />
+        {/* <SelectedWorkV2 data={workContent} /> */}
         <ProcessV2 data={process} />
         <StudioV2 data={people} />
         <TestimonialsV2 data={testimonialsContent} />

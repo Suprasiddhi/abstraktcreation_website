@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { Manrope, Noto_Sans_Devanagari, Space_Grotesk } from "next/font/google";
 import "./v2-animations.css";
 
 const manrope = Manrope({
@@ -16,6 +16,13 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "600", "700"],
 });
 
+// Only the menu overlay's vertical locale rail ("ललितपुर — नेपाल") uses this.
+const notoDevanagari = Noto_Sans_Devanagari({
+  variable: "--font-devanagari",
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
   title: "Abstrakt — One studio for the site, the brand, and everything that carries it.",
   description:
@@ -25,7 +32,7 @@ export const metadata: Metadata = {
 export default function HomeV2Layout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${manrope.variable} ${spaceGrotesk.variable}`}
+      className={`${manrope.variable} ${spaceGrotesk.variable} ${notoDevanagari.variable}`}
       style={
         {
           "--ab-bg": "#F7F6F3",

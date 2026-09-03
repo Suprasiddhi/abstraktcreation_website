@@ -3,10 +3,10 @@ import Button from "../ui/Button";
 
 export default function Header() {
   const navLinks = [
-    { label: "Service", href: "/#capabilities" },
-    { label: "Work", href: "/#work" },
-    { label: "Studio", href: "/#studio" },
-    { label: "Contact", href: "/#contact" },
+    { label: "SERVICE", href: "/#capabilities" },
+    { label: "WORK", href: "/#work" },
+    { label: "STUDIO", href: "/#studio" },
+    { label: "CONTACT", href: "/#contact" },
   ];
 
   return (

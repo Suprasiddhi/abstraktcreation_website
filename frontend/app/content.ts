@@ -1,4 +1,4 @@
-// Static content for the Home v2 landing page — no backend/API involved.
+// Static content for the Home landing page — no backend/API involved.
 // Copy is taken directly from the "Abstrakt Home" Claude Design source.
 
 export const heroContent = {

@@ -58,7 +58,7 @@ export default function CapabilitiesV3({ data }: CapabilitiesV3Props) {
   if (!pillarList.length) return null;
 
   return (
-    <section id="capabilities-v3" data-screen-label="Capabilities V3" style={{ padding: "0 0 clamp(50px,8vh,110px)", scrollMarginTop: 90 }}>
+    <section id="capabilities" data-screen-label="Capabilities" style={{ padding: "0 0 clamp(50px,8vh,110px)", scrollMarginTop: 90 }}>
       <div
         style={{
           maxWidth: 1680,

@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
+/* Native smooth scroll is disabled while Lenis owns scrolling on the home page.
+   Other routes rely on native scrolling and do not use Lenis. */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 :root {

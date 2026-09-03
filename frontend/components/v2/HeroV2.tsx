@@ -40,7 +40,7 @@ const DELETE_MS = 60;
 // `three` is the backmost plate, `one` is the foreground.
 const LAYER_IMAGES = {
   three: "/images/hero/layer3.1.png",
-  two: "/images/hero/layer2.png",
+  two: "/images/hero/layer2.1.png",
   one: "/images/hero/layer1.1.png",
 };
 

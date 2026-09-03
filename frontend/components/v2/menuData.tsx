@@ -11,11 +11,11 @@ import React from "react";
 export type NavLink = { label: string; href: string };
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "Work", href: "#work" },
-  { label: "Capabilities", href: "#capabilities" },
-  { label: "Studio", href: "#studio" },
-  { label: "Careers", href: "#careers" },
-  { label: "Contact", href: "#contact" },
+  { label: "WORK", href: "#work" },
+  { label: "CAPABILITIES", href: "#capabilities" },
+  { label: "STUDIO", href: "#studio" },
+  { label: "CAREERS", href: "#careers" },
+  { label: "CONTACT", href: "#contact" },
 ];
 
 export const STUDIOS = ["Sanepa, Lalitpur, Nepal", "3620 Adelaide, The Colony, TX"];

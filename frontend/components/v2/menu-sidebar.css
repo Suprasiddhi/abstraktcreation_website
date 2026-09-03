@@ -14,7 +14,7 @@
      runtime.
    - Colours and fonts are declared once as custom properties below
      rather than repeated inline, so they retune in one place and
-     pick up the v2 font variables from app/home-v2/layout.tsx.
+     pick up the v2 font variables from app/layout.tsx.
    - The artboard's animated wave field and purple glow are gone; the
      area beside the rail is frosted glass over the live page. See the
      "Open area" section for why.

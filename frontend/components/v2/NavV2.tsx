@@ -13,7 +13,7 @@ export type MenuVariant = "overlay" | "sidebar";
 /**
  * Which open-menu treatment ships. Both directions are mounted behind this
  * switch while they are compared — the same "keep both, cut one before
- * launch" arrangement CapabilitiesV2 / CapabilitiesAltV2 use on the page.
+ * launch" arrangement the capabilities sections used on the page.
  * Append `?menu=overlay` or `?menu=sidebar` to compare without editing code.
  */
 const DEFAULT_MENU_VARIANT: MenuVariant = "sidebar";

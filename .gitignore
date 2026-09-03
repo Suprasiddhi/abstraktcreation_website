@@ -30,3 +30,8 @@ Thumbs.db
 # TypeScript build info
 *.tsbuildinfo
 next-env.d.ts
+
+# Local agent tooling — machine-specific, not shared
+.claude/
+CLAUDE.md
+graphify-out/

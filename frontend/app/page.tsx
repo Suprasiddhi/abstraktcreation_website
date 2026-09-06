@@ -49,6 +49,7 @@ import {
   statsContent,
   testimonialsContent,
   careersContent,
+  contactContent,
 } from "./content";
 
 /** Base URL of the content API. Hardcoding localhost meant every deployed
@@ -56,11 +57,6 @@ import {
  *  and on an HTTPS page the request was blocked as mixed content before it
  *  was even attempted, so the site silently served placeholder copy. */
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-// Sections below have no backing table in the existing CMS schema and are
-// intentionally left out of the dynamic wiring — they stay on the static
-// copy from ./content.ts: Stats, Testimonials, Careers copy/roles, and the
-// Selected Work polaroid gallery (kept static by explicit choice).
 
 /** The works carousel is all artwork, so CMS work is only worth swapping in
  *  when it actually carries images. The CMS holds unillustrated placeholder
@@ -77,14 +73,7 @@ function hasIllustratedProjects(work: unknown): boolean {
 export default function Home() {
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // CMS-backed sections start empty rather than on a static default. The
-  // defaults used to be the initial state, which meant placeholder copy was
-  // always painted first and then replaced — the flash of static FAQ text on
-  // a cold load — and a section whose CMS table was empty silently kept
-  // showing convincing hardcoded content forever. Now a section either has
-  // real content or says it is unavailable.
-  // Shapes are taken from the static content objects, which remain the
-  // schema of record for what each section expects to be handed.
+  // CMS-backed sections start empty rather than on a static default.
   const [hero, setHero] = useState<typeof heroContent | null>(null);
   const [position, setPosition] = useState<typeof positionContent | null>(null);
   const [logos, setLogos] = useState<typeof logosContent | null>(null);
@@ -93,10 +82,12 @@ export default function Home() {
   const [process, setProcess] = useState<typeof processContent | null>(null);
   const [people, setPeople] = useState<typeof peopleContent | null>(null);
   const [faq, setFaq] = useState<typeof faqContent | null>(null);
+  const [stats, setStats] = useState<typeof statsContent | null>(null);
+  const [testimonials, setTestimonials] = useState<typeof testimonialsContent | null>(null);
+  const [careers, setCareers] = useState<typeof careersContent | null>(null);
+  const [contact, setContact] = useState<typeof contactContent | null>(null);
 
-  // "loading" suppresses the fallback message while the request is still in
-  // flight, so a slow network shows nothing rather than flashing "unavailable"
-  // a moment before the content lands.
+  // "loading" suppresses the fallback message while the request is still in flight
   const [status, setStatus] = useState<"loading" | "ready">("loading");
 
   useEffect(() => {
@@ -120,16 +111,16 @@ export default function Home() {
         if (Array.isArray(data?.faq?.questions) && data.faq.questions.length) {
           setFaq({ ...(data.faq || {}), questions: data.faq.questions });
         }
+        if (Array.isArray(data?.stats) && data.stats.length) setStats(data.stats);
+        if (Array.isArray(data?.testimonials) && data.testimonials.length) setTestimonials(data.testimonials);
+        if (data?.careers?.roles || data?.careers?.title) setCareers(data.careers);
+        if (data?.contact?.email || data?.contact?.headlineLine1) setContact(data.contact);
       } catch (e) {}
     }
 
     // 2. Fetch fresh content in background and refresh the cache.
     fetch(`${API_BASE}/api/content`)
       .then((res) => {
-        // A 500 or an HTML error page still resolves the promise; without
-        // this the .json() below throws and the catch treats a real server
-        // error the same as an offline backend, which is fine, but checking
-        // here keeps the failure legible in the console.
         if (!res.ok) throw new Error(`content API ${res.status}`);
         return res.json();
       })
@@ -148,6 +139,11 @@ export default function Home() {
         if (Array.isArray(data?.faq?.questions) && data.faq.questions.length) {
           setFaq({ ...(data.faq || {}), questions: data.faq.questions });
         }
+        if (Array.isArray(data?.stats) && data.stats.length) setStats(data.stats);
+        if (Array.isArray(data?.testimonials) && data.testimonials.length) setTestimonials(data.testimonials);
+        if (data?.careers?.roles || data?.careers?.title) setCareers(data.careers);
+        if (data?.contact?.email || data?.contact?.headlineLine1) setContact(data.contact);
+
         try {
           sessionStorage.setItem("abstrakt_content", JSON.stringify(data));
         } catch (e) {
@@ -155,9 +151,6 @@ export default function Home() {
         }
       })
       .catch((err) => {
-        // Backend unreachable or erroring. Sections that got nothing render
-        // their unavailable message; anything already filled from the
-        // sessionStorage cache above stays on screen.
         console.warn("[content] fetch failed:", err);
       })
       .finally(() => setStatus("ready"));
@@ -253,19 +246,19 @@ export default function Home() {
               TrustedByV2 rather than as their own section. */}
           {gate(
             logos?.length ? logos : null,
-            <TrustedByV2 data={logos!} stats={statsContent} />,
+            <TrustedByV2 data={logos!} stats={stats || statsContent} />,
             "Our clients"
           )}
           {gate(process, <ProcessV2 data={process!} />, "Our process")}
           {gate(people, <StudioV2 data={people!} />, "Our team")}
-          <TestimonialsV2 data={testimonialsContent} />
-          <CareersV2 data={careersContent} hiringTeam={hiringTeam} />
+          <TestimonialsV2 data={testimonials || testimonialsContent} />
+          <CareersV2 data={careers || careersContent} hiringTeam={hiringTeam} />
           {gate(
             faq?.questions?.length ? faq : null,
             <FaqV2 data={faq!} />,
             "Frequently asked questions"
           )}
-          <ContactV2 />
+          <ContactV2 data={contact || contactContent} />
         </main>
         <FooterV2 />
       </div>

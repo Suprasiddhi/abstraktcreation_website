@@ -118,3 +118,55 @@ export const logos = pgTable("logos", {
     sortOrder: integer("sort_order").notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// 11. Stats Table
+export const companyStats = pgTable("company_stats", {
+    id: serial("id").primaryKey(),
+    value: integer("value").notNull().default(0),
+    suffix: varchar("suffix", { length: 50 }).notNull().default(""),
+    display: varchar("display", { length: 50 }).notNull().default(""),
+    label: varchar("label", { length: 255 }).notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 12. Testimonials Table
+export const testimonials = pgTable("testimonials", {
+    id: serial("id").primaryKey(),
+    quote: text("quote").notNull().default(""),
+    authorName: varchar("author_name", { length: 255 }).notNull().default(""),
+    authorRole: varchar("author_role", { length: 255 }).notNull().default(""),
+    theme: varchar("theme", { length: 20 }).notNull().default("light"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 13. Careers Metadata Table
+export const careersMetadata = pgTable("careers_metadata", {
+    id: integer("id").primaryKey().default(1),
+    badge: varchar("badge", { length: 255 }).notNull().default("CAREERS"),
+    title: varchar("title", { length: 255 }).notNull().default("We are hiring"),
+    description: text("description").notNull().default(""),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 14. Careers Roles Table
+export const careersRoles = pgTable("careers_roles", {
+    id: serial("id").primaryKey(),
+    title: varchar("title", { length: 255 }).notNull().default(""),
+    location: varchar("location", { length: 255 }).notNull().default(""),
+    type: varchar("type", { length: 100 }).notNull().default("Full-time"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// 15. Contact Info Table
+export const contactInfo = pgTable("contact_info", {
+    id: integer("id").primaryKey().default(1),
+    headlineLine1: varchar("headline_line1", { length: 255 }).notNull().default("Let's make"),
+    headlineLine2: varchar("headline_line2", { length: 255 }).notNull().default("the thing."),
+    description: text("description").notNull().default("Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck."),
+    email: varchar("email", { length: 255 }).notNull().default("abstraktcreation@gmail.com"),
+    phone: varchar("phone", { length: 255 }).notNull().default("+977 9823901866"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

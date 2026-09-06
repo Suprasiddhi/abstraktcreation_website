@@ -185,3 +185,11 @@ export const faqContent = {
     },
   ],
 };
+
+export const contactContent = {
+  headlineLine1: "Let's make",
+  headlineLine2: "the thing.",
+  description: "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.",
+  email: "abstraktcreation@gmail.com",
+  phone: "+977 9823901866",
+};

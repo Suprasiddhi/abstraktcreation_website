@@ -20,6 +20,20 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
 
     const cleanups: Array<() => void> = [];
 
+    // ---------- Viewport width without the scrollbar ----------
+    // Full-bleed sections need the width CSS's 100vw does not give them:
+    // 100vw counts the classic scrollbar, so a element bled to "the viewport
+    // edge" with it overshoots by the scrollbar's width.
+    const setVW = () => {
+      document.documentElement.style.setProperty(
+        "--ab-vw",
+        document.documentElement.clientWidth + "px"
+      );
+    };
+    setVW();
+    addEventListener("resize", setVW);
+    cleanups.push(() => removeEventListener("resize", setVW));
+
     // ---------- Menu ----------
     // NavV2 owns the overlay's open state in React and flags it on <html>.
     // The only thing left for this hook is to stand the scroll-direction nav
@@ -58,28 +72,54 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
     });
 
     // ---------- FAQ accordion ----------
+    // Exactly one row is open at all times: clicking a closed row moves the
+    // open state to it, and clicking the already-open row does nothing
+    // rather than collapsing to an all-closed state. That keeps an answer
+    // on screen as a worked example of what the list holds, so the section
+    // never reads as a bare stack of unanswered questions.
+    const faqRows = qa<HTMLElement>("[data-faq]");
+
+    const openFaqRow = (row: HTMLElement) => {
+      faqRows.forEach((r) => {
+        const on = r === row;
+        r.dataset.open = on ? "1" : "0";
+        const b = r.querySelector<HTMLElement>("[data-faq-body]");
+        const ic = r.querySelector<HTMLElement>("[data-faq-icon]");
+        const btn = r.querySelector<HTMLElement>('[data-action="toggle-faq"]');
+        if (b) b.style.maxHeight = on ? b.scrollHeight + "px" : "0px";
+        // -90deg swings the diagonal arrow from down-right to up-right, so
+        // the open row reads as "collapse" rather than "expand".
+        if (ic) ic.style.transform = on ? "rotate(-90deg)" : "rotate(0deg)";
+        if (btn) btn.setAttribute("aria-expanded", on ? "true" : "false");
+      });
+    };
+
     qa<HTMLElement>('[data-action="toggle-faq"]').forEach((btn) => {
       const handler = () => {
         const row = btn.closest<HTMLElement>("[data-faq]");
-        if (!row) return;
-        const on = row.dataset.open !== "1";
-        qa<HTMLElement>("[data-faq]").forEach((r) => {
-          if (r === row) return;
-          r.dataset.open = "0";
-          const b = r.querySelector<HTMLElement>("[data-faq-body]");
-          if (b) b.style.maxHeight = "0px";
-          const ic = r.querySelector<HTMLElement>("[data-faq-icon]");
-          if (ic) ic.style.transform = "rotate(0deg)";
-        });
-        row.dataset.open = on ? "1" : "0";
-        const body = row.querySelector<HTMLElement>("[data-faq-body]");
-        const icon = row.querySelector<HTMLElement>("[data-faq-icon]");
-        if (body) body.style.maxHeight = on ? body.scrollHeight + "px" : "0px";
-        if (icon) icon.style.transform = on ? "rotate(45deg)" : "rotate(0deg)";
+        if (!row || row.dataset.open === "1") return;
+        openFaqRow(row);
       };
       btn.addEventListener("click", handler);
       cleanups.push(() => btn.removeEventListener("click", handler));
     });
+
+    if (faqRows.length) {
+      // Open the first row on mount. Deferred a frame so the body has been
+      // laid out and scrollHeight is real rather than 0.
+      const raf = requestAnimationFrame(() => openFaqRow(faqRows[0]));
+      cleanups.push(() => cancelAnimationFrame(raf));
+
+      // An open row's height is baked into an inline max-height, so it has
+      // to be recomputed when reflow changes how the answer wraps.
+      const onFaqResize = () => {
+        const open = faqRows.find((r) => r.dataset.open === "1");
+        const b = open?.querySelector<HTMLElement>("[data-faq-body]");
+        if (b) b.style.maxHeight = b.scrollHeight + "px";
+      };
+      addEventListener("resize", onFaqResize);
+      cleanups.push(() => removeEventListener("resize", onFaqResize));
+    }
 
     // ---------- Testimonial carousel ----------
     let qi = 0;
@@ -282,6 +322,13 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
       nav.style.setProperty("--nav-fg", dark ? "#F7F6F3" : "#0E0E0E");
       nav.style.setProperty("--nav-pill-bg", dark ? "#F7F6F3" : "#0E0E0E");
       nav.style.setProperty("--nav-pill-fg", dark ? "#0E0E0E" : "#F7F6F3");
+      // The client-login chip is a translucent scrim rather than a solid
+      // fill, so it does NOT invert the way the pills do — it stays a dark
+      // veil with light type on photographic/dark ground, and flips to a
+      // light veil with dark type on the cream page. Reusing --nav-pill-fg
+      // here would put near-black text on the dark veil over the hero.
+      nav.style.setProperty("--nav-login-bg", dark ? "rgba(14,14,14,.42)" : "rgba(14,14,14,.06)");
+      nav.style.setProperty("--nav-login-fg", dark ? "#F7F6F3" : "#0E0E0E");
     };
 
     const revealSec = q<HTMLElement>("[data-reveal-sec]");
@@ -323,10 +370,17 @@ export function useAbstraktMotion(rootRef: React.RefObject<HTMLElement | null>, 
       if (revealSec && words.length) {
         const p = prog(revealSec) * 1.18;
         const n = words.length;
+        // Unlit floor. The statement runs on a dark field, where 0.14 — the
+        // value this used while the section was cream — leaves the words a
+        // reader has not reached yet effectively invisible, so the sentence
+        // reads as blank space rather than as copy waiting to light. Kept
+        // here rather than as an inline style because this loop rewrites
+        // opacity on every tick and would overwrite one.
+        const floor = 0.26;
         for (let i = 0; i < n; i++) {
           const s = i / n;
           const e = (i + 2.2) / n;
-          words[i].style.opacity = String(0.14 + 0.86 * clamp((p - s) / (e - s), 0, 1));
+          words[i].style.opacity = String(floor + (1 - floor) * clamp((p - s) / (e - s), 0, 1));
         }
       }
       if (workSec && track) {

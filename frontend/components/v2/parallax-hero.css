@@ -36,7 +36,13 @@
 
   width: 100%;
   position: relative;
-  overflow: hidden;
+  /* NOT `overflow: hidden` — that was here in the Osmo source to clip the
+     overscanned layer plates, but any overflow value other than `visible`
+     makes this element a scroll container, and a scroll container breaks
+     `position: sticky` on every descendant. The statement band below relies
+     on a sticky child to hold the type on screen while its words light, so
+     clipping is scoped to .parallax__header (which is what actually holds
+     the plates) rather than applied to the whole hero. */
   background-color: var(--color-black);
   color: var(--color-light);
 }
@@ -49,15 +55,67 @@
   min-height: 100svh;
   display: flex;
   position: relative;
+  /* The layer plates overscan by --parallax-overscan and would otherwise
+     spill past the hero; this is the clip that used to live on .parallax. */
+  overflow: hidden;
 }
 
+/* The hero's lower band. In the Osmo source this was an empty spacer that
+   existed only to give the layer scene something to scroll against — it
+   rendered as a full screen of black between the visuals and whatever
+   followed. It now carries the positioning statement, which is revealed word
+   by word as the reader scrolls through it.
+
+   Taller than the viewport with a sticky child: the extra height is the
+   scroll distance the reveal scrubs across, and the sticky inner is what
+   holds the type centred on screen while that happens. Without the extra
+   height the words would light all at once as the section passed. */
 .parallax__content {
-  padding: var(--section-padding) var(--container-padding);
-  justify-content: center;
-  align-items: center;
-  min-height: 100svh;
-  display: flex;
+  min-height: 175svh;
   position: relative;
+  display: block;
+  padding: 0;
+}
+
+.parallax__statement-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--section-padding) var(--container-padding);
+  overflow: hidden;
+}
+
+/* A brand pool behind the type, so the band reads as a lit space rather than
+   a flat black rectangle. Sits under the text via a negative z-index on the
+   pseudo-element's own stacking context. */
+.parallax__statement-sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 80% at 50% 46%,
+    rgba(80, 30, 189, 0.26) 0%,
+    rgba(80, 30, 189, 0.07) 42%,
+    rgba(14, 14, 14, 0) 72%
+  );
+  pointer-events: none;
+}
+
+.parallax__statement {
+  position: relative;
+  margin: 0 auto;
+  max-width: 24ch;
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 600;
+  font-size: clamp(24px, 3.5vw, 54px);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: balance;
+  color: #f7f6f3;
 }
 
 .parallax__visuals {
@@ -104,6 +162,11 @@
   position: absolute;
   top: 0;
   left: 0;
+  /* Above the foreground plate (layer 4, z-index auto): the typewriter
+     title stays fully legible and glides up OVER the foreground on scroll,
+     instead of being covered by it. This trades away the Osmo-style depth
+     moment where the foreground crosses over the type. */
+  z-index: 10;
 }
 
 .parallax__title {

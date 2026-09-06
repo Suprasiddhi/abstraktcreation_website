@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Noto_Sans_Devanagari, Space_Grotesk } from "next/font/google";
+import { Instrument_Serif, Manrope, Noto_Sans_Devanagari, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import "./v2-animations.css";
 
@@ -24,6 +24,16 @@ const notoDevanagari = Noto_Sans_Devanagari({
   weight: ["400", "500", "600"],
 });
 
+// Display serif used only by the Capabilities section (headline + petal
+// titles) — a deliberate one-off contrast against the site's grotesk, taken
+// directly from that section's design handoff rather than substituted.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
   title: "Abstrakt — One studio for the site, the brand, and everything that carries it.",
   description:
@@ -34,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${spaceGrotesk.variable} ${notoDevanagari.variable} h-full antialiased`}
+      className={`${manrope.variable} ${spaceGrotesk.variable} ${notoDevanagari.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "../../components/ui/Button";
+import { AdminSkeleton } from "../../components/ui/Skeleton";
 
 // Import modular forms
 import HeroForm from "./HeroForm";
@@ -19,6 +20,8 @@ import PeopleModal from "./PeopleModal";
 import ServiceModal from "./ServiceModal";
 
 type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -64,7 +67,7 @@ export default function AdminPage() {
     setLoading(true);
     try {
       // 1. Verify password with backend
-      const authRes = await fetch("http://localhost:3001/api/auth/verify", {
+      const authRes = await fetch(`${API_BASE}/api/auth/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +83,7 @@ export default function AdminPage() {
       }
 
       // 2. Fetch content once authorized
-      const res = await fetch("http://localhost:3001/api/content");
+      const res = await fetch(`${API_BASE}/api/content`);
       if (res.ok) {
         const data = await res.json();
         setContent(data);
@@ -122,7 +125,7 @@ export default function AdminPage() {
 
     try {
       const sectionData = content[sectionId];
-      const res = await fetch(`http://localhost:3001/api/content/${sectionId}`, {
+      const res = await fetch(`${API_BASE}/api/content/${sectionId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,7 +139,7 @@ export default function AdminPage() {
         // If saving work section, also save logos table to keep database synchronized
         if (sectionId === "work" && content.logos) {
           try {
-            await fetch(`http://localhost:3001/api/content/logos`, {
+            await fetch(`${API_BASE}/api/content/logos`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -185,7 +188,7 @@ export default function AdminPage() {
     const savedPassword = localStorage.getItem("admin_password") || password;
 
     try {
-      const res = await fetch("http://localhost:3001/api/content/clear", {
+      const res = await fetch(`${API_BASE}/api/content/clear`, {
         method: "POST",
         headers: {
           "x-admin-password": savedPassword,
@@ -200,7 +203,7 @@ export default function AdminPage() {
         });
         
         // Fetch new empty content from server to update workspace state
-        const fetchRes = await fetch("http://localhost:3001/api/content");
+        const fetchRes = await fetch(`${API_BASE}/api/content`);
         if (fetchRes.ok) {
           const newData = await fetchRes.json();
           setContent(newData);
@@ -226,9 +229,18 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-sm font-semibold tracking-wider text-neutral-400 font-mono">LOADING PANEL...</p>
+      <div className="min-h-screen bg-background flex flex-col pb-20">
+        <header className="w-full border-b border-neutral-200/50 py-5 px-6 md:px-12 bg-white sticky top-0 z-40 shadow-sm">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-black tracking-tight text-foreground">ABSTRAKT</span>
+              <span className="text-[10px] font-mono bg-neutral-100 text-neutral-500 font-bold px-2 py-0.5 rounded uppercase">
+                CONTROL PANEL
+              </span>
+            </div>
+          </div>
+        </header>
+        <AdminSkeleton />
       </div>
     );
   }

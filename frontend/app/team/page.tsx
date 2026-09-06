@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
+import { TeamGridSkeleton } from "../../components/ui/Skeleton";
 
 interface SocialItem {
   platform: string;
@@ -58,6 +59,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
     // 1. Instant render from client sessionStorage cache
     const cached = sessionStorage.getItem("abstrakt_content");
@@ -72,7 +74,7 @@ export default function TeamPage() {
     }
 
     // 2. Fetch fresh team content in background
-    fetch("http://localhost:3001/api/content")
+    fetch(`${API_BASE}/api/content`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.people?.team) {
@@ -137,11 +139,9 @@ export default function TeamPage() {
             </div>
           </div>
 
-          {/* Loading State */}
+          {/* Loading State — mirrors the team card grid so cards land in place */}
           {loading ? (
-            <div className="w-full py-24 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
-            </div>
+            <TeamGridSkeleton count={6} />
           ) : team.length > 0 ? (
             /* Team Grid (3 columns matching user screenshot layout) */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">

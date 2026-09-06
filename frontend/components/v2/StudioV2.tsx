@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import PlaceholderSlot from "./PlaceholderSlot";
+import SectionHeading from "./SectionHeading";
 import { displayFont } from "./tokens";
 
 if (typeof window !== "undefined") {
@@ -80,11 +81,8 @@ export default function StudioV2({ data }: StudioV2Props) {
           }}
         >
           <div>
-            <span data-rv="eyebrow" style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#8B8A84", marginBottom: 14 }}>
-              (05) THE PEOPLE
-            </span>
             <h2 style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(32px,5.2vw,78px)", lineHeight: 0.94, letterSpacing: "-.04em" }}>
-              <span data-rv="line"><span>Who you actually work with</span></span>
+              <span data-rv="line"><span><SectionHeading accent={2}>Who you actually work with</SectionHeading></span></span>
             </h2>
           </div>
           <span data-rv="eyebrow" style={{ ["--rv-i" as string]: 2, fontSize: 12, fontWeight: 600, letterSpacing: ".16em", color: "#8B8A84", paddingBottom: 8 }}>TAP + TO READ</span>

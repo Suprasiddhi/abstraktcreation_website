@@ -23,11 +23,13 @@ export const logosContent = [
   { name: "ELEVATE" },
 ];
 
+// `display` opts a stat out of the count-up animation and renders as-is —
+// the last row is a symbol, which has no number to count toward.
 export const statsContent = [
-  { value: 48, suffix: "+", label: "Projects shipped" },
-  { value: 6, suffix: "", label: "Disciplines under one roof" },
-  { value: 2, suffix: "", label: "Studios, one team" },
-  { value: 4, suffix: " wks", label: "From brief to launch, typical" },
+  { value: 30, suffix: "+", label: "Projects Delivered" },
+  { value: 15, suffix: "+", label: "Clients Worked With" },
+  { value: 6, suffix: "+", label: "Creative Capabilities" },
+  { value: 0, suffix: "", display: "∞", label: "Ideas Turned Real" },
 ];
 
 export const capabilitiesContent = {

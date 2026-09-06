@@ -4,6 +4,8 @@ import { displayFont, LINE, INK } from "./tokens";
 interface StatItem {
   value: number;
   suffix?: string;
+  /** Literal glyph to show instead of a counted number (e.g. "∞"). */
+  display?: string;
   label: string;
 }
 
@@ -36,8 +38,10 @@ export default function StatsV2({ data }: StatsV2Props) {
             }}
           >
             <span
-              data-stat={stat.value}
-              data-suffix={stat.suffix || ""}
+              // A `display` stat carries no data-stat, so the count-up
+              // observer never picks it up and the glyph renders as authored.
+              data-stat={stat.display ? undefined : stat.value}
+              data-suffix={stat.display ? undefined : stat.suffix || ""}
               style={{
                 fontFamily: displayFont,
                 fontWeight: 700,
@@ -47,9 +51,9 @@ export default function StatsV2({ data }: StatsV2Props) {
                 color: ACCENT_COLORS[i % ACCENT_COLORS.length],
               }}
             >
-              0
+              {stat.display ?? 0}
             </span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#6B7280" }}>{stat.label}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#6B7280" }}>{stat.label}</span>
           </div>
         ))}
       </div>

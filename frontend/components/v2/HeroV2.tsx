@@ -16,7 +16,23 @@ interface HeroV2Props {
     headlineLine1?: string;
     description?: string;
   };
+  /**
+   * The positioning statement, revealed word by word as the reader scrolls
+   * the hero's lower section.
+   *
+   * This used to be its own full-width section (PositionV2) sitting between
+   * the hero and the works carousel. The hero already ended with an empty
+   * 100vh black band — `.parallax__content`, a spacer the Osmo source used to
+   * give the layer scene something to scroll against — so the reader crossed
+   * a screen of nothing before reaching the statement. Putting the statement
+   * in that band uses the space the hero was already spending.
+   */
+  statement?: string;
 }
+
+/** Fallback copy, previously PositionV2's own default. */
+const DEFAULT_STATEMENT =
+  "We build the digital side of a business and the creative work around it. The site, the identity, the campaign, the content. One team, in house.";
 
 // Hero title typewriter cycle: the brand stamps first, then the three
 // verbs escalate. Timings ported from the previous site's hero.
@@ -55,9 +71,10 @@ const LAYERS = [
   { layer: "4", yPercent: 10 },
 ];
 
-export default function HeroV2({}: HeroV2Props) {
+export default function HeroV2({ statement }: HeroV2Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [typed, setTyped] = useState("");
+  const words = (statement || DEFAULT_STATEMENT).trim().split(/\s+/);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   // Typewriter: type the word, hold, delete, move to the next, loop.
@@ -173,7 +190,30 @@ export default function HeroV2({}: HeroV2Props) {
           <div className="parallax__fade" />
         </div>
       </section>
-      <section className="parallax__content" />
+      {/* The statement, in the black band the hero already ended on. The
+          section is taller than the viewport with a sticky inner, which is
+          what gives the word reveal scroll distance to scrub across — the
+          same arrangement PositionV2 used, now inside the hero. Height is
+          175vh against a 100vh sticky child, so the words light over 75vh.
+
+          `data-reveal-sec` and `data-rw` are the hooks useAbstraktMotion
+          reads; that hook queries by attribute, so it keeps driving this
+          without knowing the markup moved. */}
+      <section
+        className="parallax__content"
+        data-reveal-sec="1"
+        data-screen-label="Position"
+      >
+        <div className="parallax__statement-sticky">
+          <p className="parallax__statement">
+            {words.map((w, i) => (
+              <span key={i} data-rw="1" style={{ opacity: 0.26 }}>
+                {w}{" "}
+              </span>
+            ))}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

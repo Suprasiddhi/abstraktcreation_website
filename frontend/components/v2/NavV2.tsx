@@ -3,33 +3,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { displayFont } from "./tokens";
 import { getLenis } from "../../lib/v2/useLenis";
-import MenuFieldCanvas from "./MenuFieldCanvas";
 import SidebarMenuV2 from "./SidebarMenuV2";
-import { NAV_LINKS, SOCIALS, STUDIOS, CONTACTS } from "./menuData";
-import "./menu-overlay.css";
 
-export type MenuVariant = "overlay" | "sidebar";
-
-/**
- * Which open-menu treatment ships. Both directions are mounted behind this
- * switch while they are compared — the same "keep both, cut one before
- * launch" arrangement the capabilities sections used on the page.
- * Append `?menu=overlay` or `?menu=sidebar` to compare without editing code.
- */
-const DEFAULT_MENU_VARIANT: MenuVariant = "sidebar";
-
-export default function NavV2({ variant }: { variant?: MenuVariant }) {
-  const [menuVariant, setMenuVariant] = useState<MenuVariant>(variant ?? DEFAULT_MENU_VARIANT);
-
-  // Read after mount rather than during render so the server and client agree
-  // on the first paint.
-  useEffect(() => {
-    if (variant) return;
-    const q = new URLSearchParams(window.location.search).get("menu");
-    if (q === "overlay" || q === "sidebar") setMenuVariant(q);
-  }, [variant]);
-
-  // The overlay used to be toggled imperatively from useAbstraktMotion. It now
+export default function NavV2() {
+  // The menu used to be toggled imperatively from useAbstraktMotion. It now
   // owns its open state in React so the backdrop canvas can be started and
   // stopped with it; the hook reads `data-menu-open` off <html> for the one
   // thing it still needs to know (stand down the scroll-direction nav hide).
@@ -98,7 +75,9 @@ export default function NavV2({ variant }: { variant?: MenuVariant }) {
   // frosted glass — the bar would show through it, and its wordmark sits
   // almost exactly under the field's watermark. Fade it out instead; the
   // watermark stands in for it while the menu is open.
-  const hideBar = open && menuVariant === "sidebar";
+  // The sidebar carries its own wordmark and close control, so the bar steps
+  // aside entirely while it is open rather than sitting on top of it.
+  const hideBar = open;
 
   return (
     <>
@@ -149,6 +128,66 @@ export default function NavV2({ variant }: { variant?: MenuVariant }) {
             ABSTRAKT<span>.</span>
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Account access, not a third marketing CTA, so it stays lighter
+                than the two filled pills — but it cannot be bare text. The
+                bar crosses the hero photograph, where `--nav-fg` resolves to
+                near-white and the backdrop behind this one element runs from
+                a blown-out softbox to dark wall: no single colour is legible
+                across it, and a hairline divider disappeared entirely. A
+                frosted chip gives the link its own ground so legibility stops
+                depending on what is behind it, while a translucent fill and
+                no border keep it clearly below the solid pills.
+
+                Points at /admin as a placeholder until a real client-portal
+                route exists; repoint the href once one does. */}
+            <a
+              className="ab-nav-login"
+              href="/admin"
+              // The label is hidden below 720px, leaving only the glyph —
+              // without this the link would have no accessible name there.
+              aria-label="Client login"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                height: 42,
+                padding: "0 16px",
+                borderRadius: 999,
+                // Fallbacks are the DARK pair: applyTone only sets these on
+                // the first rAF, and the page always opens on the hero
+                // photograph — defaulting light would flash dark type on the
+                // photo for a frame.
+                color: "var(--nav-login-fg,#F7F6F3)",
+                background: "var(--nav-login-bg,rgba(14,14,14,.42))",
+                backdropFilter: "blur(10px) saturate(1.2)",
+                WebkitBackdropFilter: "blur(10px) saturate(1.2)",
+                transition: "background .3s ease, color .3s ease",
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: ".01em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                style={{ flex: "0 0 auto", opacity: 0.85 }}
+              >
+                <rect x="4" y="10.5" width="16" height="10.5" rx="2.2" />
+                <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+              </svg>
+              <span className="ab-nav-login__label">Client Login</span>
+            </a>
+            {/* The divider that used to sit here is gone: a 1px hairline at
+                18% opacity vanished over the hero photograph, and the chip's
+                own edge already separates account access from the CTAs. */}
             <a
               href="#work"
               style={{
@@ -200,101 +239,7 @@ export default function NavV2({ variant }: { variant?: MenuVariant }) {
         </div>
       </div>
 
-      {menuVariant === "sidebar" ? (
-        <SidebarMenuV2 open={open} onClose={closeMenu} onNavigate={goTo} closeRef={closeRef} />
-      ) : (
-      <div id="menu-overlay" className="mv2" data-menu="1" data-open={open ? "1" : "0"} aria-hidden={!open} inert={!open}>
-        <MenuFieldCanvas className="mv2__canvas" active={open} />
-        <div className="mv2__glow" />
-        <div className="mv2__scrim" />
-        <div className="mv2__scrim mv2__scrim--bottom" />
-
-        <div className="mv2__rail">
-          <span className="mv2__rail-line" />
-          <span className="mv2__rail-text" lang="ne">
-            ललितपुर — नेपाल
-          </span>
-          <span className="mv2__rail-line mv2__rail-line--down" />
-        </div>
-
-        <div className="mv2__head">
-          <span className="mv2__wordmark">
-            ABSTRAKT<span className="mv2__wordmark-dot">.</span>
-          </span>
-          <div className="mv2__head-actions">
-            <a className="mv2__cta" href="#contact" onClick={goTo("#contact")}>
-              <span>Start a project</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12h13" />
-                <path d="M12 6l6 6-6 6" />
-              </svg>
-            </a>
-            <button type="button" ref={closeRef} className="mv2__close" onClick={() => setOpen(false)}>
-              <span className="mv2__close-glyph">
-                <span />
-                <span />
-              </span>
-              <span>Close</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="mv2__body">
-          <nav className="mv2__nav" aria-label="Primary">
-            {NAV_LINKS.map((link, i) => (
-              <span className="mv2__line" key={link.label}>
-                <a
-                  className="mv2__link"
-                  href={link.href}
-                  onClick={goTo(link.href)}
-                  style={{ transitionDelay: open ? `${(0.14 + i * 0.06).toFixed(2)}s` : "0s" }}
-                >
-                  {/* Two stacked copies rolled by 50% on hover — the second one
-                      carries the accent colour. */}
-                  <span className="mv2__roll">
-                    <span className="mv2__word">{link.label}</span>
-                    <span className="mv2__word mv2__word--accent">{link.label}</span>
-                  </span>
-                </a>
-              </span>
-            ))}
-          </nav>
-
-          <div className="mv2__meta">
-            <div className="mv2__meta-group">
-              <span className="mv2__meta-label">STUDIOS</span>
-              <span className="mv2__meta-text">
-                {STUDIOS.map((line, i) => (
-                  <React.Fragment key={line}>
-                    {i > 0 && <br />}
-                    {line}
-                  </React.Fragment>
-                ))}
-              </span>
-            </div>
-            <div className="mv2__meta-group">
-              <span className="mv2__meta-label">DIRECT</span>
-              {CONTACTS.map((c) => (
-                <a
-                  key={c.href}
-                  className={c.strong ? "mv2__meta-link mv2__meta-link--strong" : "mv2__meta-link"}
-                  href={c.href}
-                >
-                  {c.label}
-                </a>
-              ))}
-            </div>
-            <div className="mv2__socials">
-              {SOCIALS.map((s) => (
-                <a key={s.label} className="mv2__social" href={s.href} aria-label={s.label} target="_blank" rel="noreferrer">
-                  {s.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-      )}
+      <SidebarMenuV2 open={open} onClose={closeMenu} onNavigate={goTo} closeRef={closeRef} />
     </>
   );
 }

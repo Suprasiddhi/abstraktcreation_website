@@ -380,9 +380,6 @@ export default function WorksV2({ data }: WorksV2Props) {
           gap: "clamp(28px,5vh,60px)",
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: BRAND_LIGHT }}>
-          (03) OUR WORKS
-        </span>
 
         {/* Copy left, rail right. The rail is allowed to run past the container
             and is clipped by the section, which is what puts a partial card at

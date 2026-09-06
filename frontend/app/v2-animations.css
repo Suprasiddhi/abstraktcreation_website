@@ -1,12 +1,3 @@
-@keyframes abInfRL {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-100%, 0, 0); }
-}
-@keyframes abInfLR {
-  from { transform: translate3d(-100%, 0, 0); }
-  to { transform: translate3d(0, 0, 0); }
-}
-
 /* ---------------------------------------------------------------
    Infinite marquee (ported from Vrit Website Landing)
    Five identical copies of the content sit side by side; each copy
@@ -15,7 +6,7 @@
    container masks its left/right edges so tiles dissolve out
    instead of being cut (the source project's `.sideXFade`).
    --------------------------------------------------------------- */
-.ab-inf-x {
+.ab-inf-x--masked {
   mask-image: linear-gradient(
     to right,
     rgba(0, 0, 0, 0),
@@ -34,29 +25,398 @@
   );
 }
 
-.ab-inf-x:hover > div {
-  animation-play-state: paused;
+/* Hover-pause, drag and the drift itself are driven per-frame in
+   InfiniteMover.tsx — a CSS animation can only run or hard-`paused`, which
+   snaps to a halt and cannot accept drag input. Text selection is off so a
+   drag across the row pans it instead of highlighting logo captions. */
+.ab-inf-x {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ab-inf-x img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Solid-ground edge fades, painted over the row instead of masking it.
+   Narrow on phones so the strip doesn't dissolve on a small viewport.
+
+   The ramp holds full opacity for the first stretch and uses eased stops
+   rather than a bare two-colour gradient: a linear fade to `transparent`
+   leaves a visible band where the logo is half-dissolved but still clearly
+   a rectangle, which is what made the row's ends read as unclean. */
+.ab-marquee-fade {
+  pointer-events: none;
+  position: absolute;
+  inset-block: 0;
+  z-index: 10;
+  width: 56px;
+}
+@media (min-width: 640px) { .ab-marquee-fade { width: 96px; } }
+@media (min-width: 1024px) { .ab-marquee-fade { width: 150px; } }
+
+/* Every stop is the same colour, varying only in alpha — letting a stop
+   resolve to a grey makes the fade read as a dark band laid over the row
+   rather than as the page covering the logos. The eased alpha steps
+   approximate a smooth dissolve, since a plain two-stop linear fade banks
+   up visibly halfway.
+
+   White rather than the cream ground (#F7F6F3): the cream is dark enough
+   against the pale logos to read as a visible plate at the row's ends. */
+.ab-marquee-fade--l {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 12%,
+    rgba(255, 255, 255, 0.86) 34%,
+    rgba(255, 255, 255, 0.55) 56%,
+    rgba(255, 255, 255, 0.22) 78%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.ab-marquee-fade--r {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 12%,
+    rgba(255, 255, 255, 0.86) 34%,
+    rgba(255, 255, 255, 0.55) 56%,
+    rgba(255, 255, 255, 0.22) 78%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* ---------------------------------------------------------------
+   Footer links
+   The links had no hover state at all — nothing confirmed they were
+   interactive. A 1px rule wipes in from the left while the label
+   goes to full white.
+
+   `scaleX` on a pseudo-element rather than `text-decoration` or a
+   width transition: it runs on the compositor, so twelve links
+   animating in one corner of the page cost no layout work. The rule
+   is inset 1px below the text baseline box so descenders in
+   "Capabilities" clear it.
+   The columns are stretch-aligned flex containers, so a block-level link
+   would fill the full column width and the rule would overshoot the text;
+   `align-self: flex-start` shrinks each link to its own content.
+   --------------------------------------------------------------- */
+.ab-flink {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+  width: fit-content;
+  color: rgba(250, 250, 250, 0.8);
+  transition: color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ab-flink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: #9a78f5;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ab-flink:hover {
+  color: #ffffff;
+}
+.ab-flink:hover::after {
+  transform: scaleX(1);
+}
+/* Leaving on the right mirrors the entry, so the rule wipes out the
+   way the pointer travelled rather than snapping away. */
+.ab-flink:not(:hover)::after {
+  transform-origin: right center;
+}
+.ab-flink:focus-visible {
+  outline: 2px solid #9a78f5;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------
+   Nav client login
+   A frosted chip, not bare text: the bar crosses the hero photograph,
+   where a single flat colour cannot stay legible across a backdrop
+   that runs from blown-out softbox to dark wall inside one element's
+   width. The chip carries its own ground; the translucent fill keeps
+   it below the two solid pills beside it.
+
+   The wipe-in rule is the same one the footer links use, scoped to the
+   label span so it tracks the text and not the lock glyph. Colours are
+   `currentColor` / the --nav-login-* pair, which useAbstraktMotion
+   swaps per section.
+   --------------------------------------------------------------- */
+.ab-nav-login__label {
+  position: relative;
+}
+.ab-nav-login__label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ab-nav-login:hover .ab-nav-login__label::after {
+  transform: scaleX(1);
+}
+.ab-nav-login:not(:hover) .ab-nav-login__label::after {
+  transform-origin: right center;
+}
+/* The chip's veil deepens on hover so the whole control responds, not just
+   the underline — `color-mix` darkens whatever tone is currently set rather
+   than hardcoding a second pair of colours. */
+.ab-nav-login:hover {
+  /* !important because the base background is an inline style (this
+     component styles inline throughout) and would otherwise outrank it. */
+  background: color-mix(in srgb, var(--nav-login-bg, rgba(14, 14, 14, 0.42)) 100%, #000 14%) !important;
+}
+.ab-nav-login:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* The bar carries a wordmark, this chip, and two pills on one row. Below
+   this width the label is the first thing that can go without losing a
+   destination — the lock glyph still reads as account access, and keeping
+   the chip square-ish preserves a full 42px target. */
+@media (max-width: 720px) {
+  .ab-nav-login__label {
+    display: none;
+  }
+  .ab-nav-login {
+    padding: 0 13px !important;
+    gap: 0 !important;
+  }
+}
+
+/* The legal row is set in small caps at 42% opacity; it only needs to
+   confirm it is live, not draw the eye away from the columns above. */
+.ab-flink--quiet {
+  color: rgba(250, 250, 250, 0.42);
+}
+.ab-flink--quiet:hover {
+  color: rgba(250, 250, 250, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-flink,
+  .ab-flink::after {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* The stat row is a single divided line on desktop. Four columns starve on
+   a phone, so it folds to two — and the divider rules have to be re-cut for
+   the new grid: a left rule on the right-hand column only, plus a top rule
+   on the second row, or the borders would trace the old four-up layout. */
+@media (max-width: 760px) {
+  .ab-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    row-gap: 26px;
+  }
+  .ab-stat-row > div {
+    border-left: none !important;
+  }
+  .ab-stat-row > div:nth-child(2n) {
+    border-left: 1px solid #e2e1db !important;
+  }
+  .ab-stat-row > div:nth-child(n + 3) {
+    padding-top: 26px;
+    border-top: 1px solid #e2e1db;
+  }
+}
+
+/* FAQ rows: the whole row is the hit target, so it should look live on
+   hover — the question shifts toward the brand colour and the chevron
+   lifts slightly. The open row keeps a plain chevron since clicking it
+   again is intentionally a no-op. */
+.ab-faq-btn:hover span:nth-child(2) {
+  color: #501ebd;
+}
+.ab-faq-btn span:nth-child(2) {
+  transition: color 0.25s ease;
+}
+.ab-faq-btn:hover .ab-faq-chevron {
+  background: #3c14a0;
+}
+.ab-faq-btn:focus-visible {
+  outline: 2px solid #501ebd;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+[data-faq][data-open="1"] .ab-faq-btn {
+  cursor: default;
+}
+
+/* The testimonial reel runs to the viewport's right edge instead of ending
+   at the 1680 container. The bleed is the container's right padding plus
+   whatever margin the max-width leaves at wide viewports.
+
+   `--ab-vw` is the viewport width excluding the scrollbar, set from JS —
+   plain 100vw includes it and would overshoot by ~15px. It falls back to
+   100vw before that runs; the section's overflow:hidden absorbs the
+   difference either way.
+
+   Only above the breakpoint where the grid is still two columns; once it
+   folds to one column the card would otherwise hang off the screen. */
+@media (min-width: 901px) {
+  .ab-quote-bleed {
+    width: auto;
+    margin-right: calc(
+      ((var(--ab-vw, 100vw) - min(var(--ab-vw, 100vw), 1680px)) / -2) -
+        clamp(18px, 3.6vw, 60px)
+    );
+  }
+  /* Bounded by the grid gap so the band never reaches back under the
+     heading column — it only covers the run a dragged card crosses. */
+  .ab-quote-bleed--faded {
+    --quote-fade: min(72px, clamp(24px, 4vw, 64px));
+  }
+}
+
+/* The rail's overflow:hidden slices the card entering from the left through
+   its middle, mid-word. A mask dissolves it instead.
+
+   A mask rather than an overlay gradient because the cards alternate light
+   and dark: an overlay tuned to the cream ground would sit as a pale haze
+   over a dark card, whereas a mask removes the card itself whatever its
+   colour. Only the left edge is treated — the right side deliberately
+   bleeds off the viewport, where there is no edge to see.
+
+   The ramp is pulled left of the content rather than run inward from the
+   rail's edge. Cards rest at left:0, so a ramp starting at the rail's own
+   origin puts the resting card in its most transparent stretch and washes
+   out the quote — which is exactly what percentage stops did. Instead the
+   mask box is widened `--quote-fade` to the left and the gradient spends
+   that whole band, reaching full opacity at x=0. At rest the leading card
+   is untouched; only a card dragged past the edge dissolves. */
+.ab-quote-bleed--faded {
+  /* Zero until the two-column layout is in play: once the grid folds, the
+     rail starts at the section gutter and a band of negative margin would
+     pull the leading card into it. */
+  --quote-fade: 0px;
+  /* Real space to the left of the content for the ramp to live in. The mask
+     box stops at the element's border box, so a layer offset to negative x
+     would simply be clipped; the padding creates the band and the negative
+     margin puts the content back where the grid intends it. */
+  padding-left: var(--quote-fade);
+  margin-left: calc(-1 * var(--quote-fade));
+  -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0.35) 30%,
+      rgba(0, 0, 0, 0.85) 70%,
+      rgba(0, 0, 0, 1) 100%
+    ),
+    linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1));
+  mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0.35) 30%,
+      rgba(0, 0, 0, 0.85) 70%,
+      rgba(0, 0, 0, 1) 100%
+    ),
+    linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1));
+  /* The gradient spends itself across the padding band and is fully opaque
+     by the time it reaches the content; a second opaque layer covers the
+     rest of the rail. */
+  -webkit-mask-size: var(--quote-fade) 100%, calc(100% - var(--quote-fade)) 100%;
+  mask-size: var(--quote-fade) 100%, calc(100% - var(--quote-fade)) 100%;
+  -webkit-mask-position: 0 0, var(--quote-fade) 0;
+  mask-position: 0 0, var(--quote-fade) 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 /* Mismatched client logos (different crops, backgrounds, even photos)
    are unified by desaturating them at rest and restoring colour on
    hover — the tile the visitor is looking at is the one that pops. */
+/* Marks are already flattened to one grey by LogoSilhouette, so there is no
+   colour left to desaturate — the row's rest/hover state is carried by
+   opacity alone, which keeps every logo weighted the same. */
+/* Greyscale at rest so the row reads as one quiet strip, full brand colour
+   on hover. Both live in a CSS filter rather than being baked into the
+   pixels, so the transition is genuinely reversible. The rest state is
+   lightened as well as desaturated — an undimmed greyscale mark sits far
+   too dark on the cream ground and reads as a black blob. */
 .ab-logo-tile img,
 .ab-logo-tile span {
-  filter: grayscale(1);
-  opacity: 0.5;
-  transition: filter 0.45s ease, opacity 0.45s ease;
+  /* `grayscale` alone preserves luminance, so a dark mark — or a source
+     that is a photograph rather than a flat mark — stays a heavy black
+     block on the cream ground. The brightness/contrast pair lifts the
+     dark end toward the background before the opacity knocks it back,
+     which is what keeps the row reading as quiet client marks. */
+  filter: grayscale(1) brightness(1.35) contrast(0.72) opacity(0.62);
+  transition: filter 0.35s ease-in-out;
 }
 
 .ab-logo-tile:hover img,
 .ab-logo-tile:hover span {
-  filter: grayscale(0);
-  opacity: 1;
+  filter: grayscale(0) brightness(1) contrast(1) opacity(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ab-inf-x > div {
-    animation: none !important;
+  /* InfiniteMover bails out of its rAF loop under reduced motion, leaving
+     the track at its untranslated rest position — nothing to disable here,
+     but the grab cursor would promise motion the row no longer has. */
+  .ab-inf-x {
+    cursor: default !important;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Responsive collapse
+   The section layouts are authored as two-column grids in inline
+   styles. Below the tablet breakpoint those columns starve — a
+   sticky heading column lands around 60px wide and the copy beside
+   it is unreadable — so every marked grid folds to a single column.
+   These carry !important because the grid template they override
+   is an inline style, which otherwise always wins.
+   --------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .ab-grid-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  /* A sticky heading is pointless once it is stacked above the
+     content it labelled — it would pin over the scrolling copy. */
+  .ab-sticky-head {
+    position: static !important;
+    top: auto !important;
+  }
+}
+
+/* The hiring team's two portrait cards sit inside an already-narrow
+   column, so they need their own, lower breakpoint. */
+@media (max-width: 560px) {
+  .ab-grid-pair {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* The footer's address + three link columns step down in two stages
+   rather than collapsing straight to one — the link lists are short
+   enough to sit two-up long after the address block needs its own row. */
+@media (max-width: 900px) {
+  .ab-grid-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 520px) {
+  .ab-grid-footer {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
@@ -135,5 +495,451 @@
   }
   .ab-in [data-rv="rule"] {
     transform: scaleX(1);
+  }
+}
+
+/* ---------------------------------------------------------------
+   Capabilities grid (bento)
+   Tile hover states and the grid's responsive collapse. The design
+   is authored as a six-column bento; below the breakpoints here that
+   many columns starve every tile, so the spans step down rather than
+   the whole grid folding at once.
+   --------------------------------------------------------------- */
+/* Bento tiles — hover reveal.
+
+   At rest the grid is one composition rather than a set of labelled cards:
+   the name is summoned on approach instead of stamped on permanently.
+
+   This is safe to gate behind hover ONLY because the capabilities list
+   directly below states every pillar in full, with no hover required — that
+   section is the touch and keyboard path to the same information. The tiles
+   are still real links and still focusable, and :focus-visible gets the same
+   reveal so the caption is never keyboard-inaccessible.
+
+   The curve is written out rather than using --ab-ease: that token is
+   declared inside a prefers-reduced-motion: no-preference block, so
+   referencing it here would silently resolve to nothing for anyone who
+   asked for reduced motion. */
+.ab-tile {
+  /* Two curves, deliberately different jobs. `--tile-ease` is the site's
+     standard decelerate for things that travel. `--tile-soft` is gentler at
+     both ends and is used for the image scale, which is a large slow move
+     where a sharp deceleration reads as a snap. */
+  --tile-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tile-soft: cubic-bezier(0.33, 0.1, 0.15, 1);
+  isolation: isolate;
+}
+/* The image both scales and lifts its saturation/brightness: at rest the
+   grid sits slightly held back so it reads as one even field, and the
+   hovered tile is the only one at full colour. That is what makes the
+   hover feel like focus rather than just movement.
+   Durations differ between enter and leave — see the :hover rule. */
+.ab-tile__img {
+  transform: scale(1.001);
+  filter: saturate(0.82) brightness(0.86);
+  transition: transform 1.05s var(--tile-soft), filter 0.75s var(--tile-ease);
+  will-change: transform, filter;
+}
+/* Scrim, title and category are three layers on three delays, so the
+   reveal arrives as a short sequence — ground, then name, then label —
+   instead of one flat cross-fade. */
+.ab-tile__scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 68%;
+  background: linear-gradient(
+    to top,
+    rgba(14, 14, 14, 0.94),
+    rgba(14, 14, 14, 0.55) 42%,
+    rgba(14, 14, 14, 0)
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s var(--tile-ease);
+}
+/* A hairline of brand light that wipes in along the bottom edge, anchored
+   left. It gives the reveal a direction and ties the tile to the eyebrow
+   rules used elsewhere in the page. */
+.ab-tile__edge {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: #9a78f5;
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+  transition: transform 0.6s var(--tile-ease);
+}
+.ab-tile__t,
+.ab-tile__c {
+  display: block;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s var(--tile-ease), transform 0.65s var(--tile-ease);
+}
+.ab-tile__c {
+  transition-delay: 0.07s;
+}
+
+.ab-tile:hover .ab-tile__img,
+.ab-tile:focus-visible .ab-tile__img {
+  transform: scale(1.06);
+  filter: saturate(1.06) brightness(1);
+  /* Enter is slower than leave: the reveal should feel considered, the
+     retreat should get out of the way. */
+  transition: transform 1.35s var(--tile-soft), filter 0.6s var(--tile-ease);
+}
+.ab-tile:hover .ab-tile__scrim,
+.ab-tile:focus-visible .ab-tile__scrim,
+.ab-tile:hover .ab-tile__t,
+.ab-tile:focus-visible .ab-tile__t,
+.ab-tile:hover .ab-tile__c,
+.ab-tile:focus-visible .ab-tile__c {
+  opacity: 1;
+}
+.ab-tile:hover .ab-tile__t,
+.ab-tile:focus-visible .ab-tile__t,
+.ab-tile:hover .ab-tile__c,
+.ab-tile:focus-visible .ab-tile__c {
+  transform: translateY(0);
+}
+.ab-tile:hover .ab-tile__edge,
+.ab-tile:focus-visible .ab-tile__edge {
+  transform: scaleX(1);
+}
+.ab-tile:focus-visible {
+  outline: 2px solid #9a78f5;
+  outline-offset: 3px;
+}
+
+/* Reduced motion: keep the reveal, drop the travel. The caption still needs
+   to appear on hover — it is the only naming this section does — so opacity
+   is retained and only the movement, scale and filter shift are removed. */
+@media (prefers-reduced-motion: reduce) {
+  .ab-tile__img,
+  .ab-tile:hover .ab-tile__img,
+  .ab-tile:focus-visible .ab-tile__img {
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .ab-tile__t,
+  .ab-tile__c {
+    transform: none;
+    transition: opacity 0.2s linear;
+  }
+  .ab-tile__edge {
+    transition: none;
+  }
+}
+
+/* No hover available (touch): the grid would otherwise be six anonymous
+   photographs, since a tap fires navigation rather than a hover state. Show
+   the captions permanently there — the composition matters less than the
+   work being identifiable. */
+@media (hover: none) {
+  .ab-tile__scrim,
+  .ab-tile__t,
+  .ab-tile__c {
+    opacity: 1;
+    transform: none;
+  }
+  .ab-tile__img {
+    filter: none;
+  }
+}
+
+/* Two columns: the wide hero and the stacked pair each take a full
+   half, and the square crops pair off beneath them. */
+@media (max-width: 1024px) {
+  .ab-bento {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .ab-bento > * {
+    grid-column: span 2 !important;
+  }
+  .ab-bento > *:first-child {
+    grid-column: span 4 !important;
+  }
+}
+
+/* One column. The bento reading order already runs hero → pair →
+   crop → text → crop, so stacking needs no reordering. */
+@media (max-width: 640px) {
+  .ab-bento {
+    grid-template-columns: 1fr !important;
+  }
+  .ab-bento > *,
+  .ab-bento > *:first-child {
+    grid-column: span 1 !important;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Capabilities index (auto-advancing list)
+
+   Rows expand one at a time on a timer, and the open row shows its
+   description. The expansion animates grid-template-rows from 0fr to
+   1fr rather than a max-height: that transitions to the content's
+   real height, so a longer description is never clipped by a guessed
+   pixel ceiling and a shorter one never leaves a gap.
+   --------------------------------------------------------------- */
+.ab-cap-row {
+  --cap-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  transition: padding-left 0.45s var(--cap-ease), background 0.45s ease;
+}
+/* A brand rule that grows down the left edge of the open row, tying the
+   list to the eyebrow rules used elsewhere on the page. */
+.ab-cap-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #9a78f5;
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 0.55s var(--cap-ease);
+}
+.ab-cap-row.is-open {
+  padding-left: 22px;
+  background: linear-gradient(90deg, rgba(154, 120, 245, 0.07), rgba(154, 120, 245, 0) 42%);
+}
+.ab-cap-row.is-open::before {
+  transform: scaleY(1);
+}
+.ab-cap-row__t {
+  display: block;
+  transition: color 0.4s ease, transform 0.5s var(--cap-ease);
+}
+.ab-cap-row.is-open .ab-cap-row__t {
+  color: #9a78f5;
+}
+.ab-cap-row__l {
+  transition: color 0.4s ease, opacity 0.4s ease;
+}
+.ab-cap-row.is-open .ab-cap-row__l {
+  color: rgba(247, 246, 243, 0.78);
+}
+.ab-cap-row:focus-visible {
+  outline: 2px solid #9a78f5;
+  outline-offset: -2px;
+}
+
+/* Collapsed by default; the open row animates to its content height. */
+.ab-cap-row__wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.6s var(--cap-ease), opacity 0.45s ease;
+}
+.ab-cap-row.is-open .ab-cap-row__wrap {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Dwell countdown under the open row's title. React remounts this on every
+   advance (it is keyed on the active index), which is what restarts the
+   animation — a CSS animation on a persistent node runs only once. */
+.ab-cap-row__prog {
+  display: block;
+  height: 1px;
+  margin: 0 8px;
+  background: #9a78f5;
+  transform-origin: left center;
+  animation: abCapDwell var(--dwell, 5200ms) linear forwards;
+}
+@keyframes abCapDwell {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Reduced motion: the row still opens and the countdown still reads, but
+   neither animates — the indicator sits full-width instead of sweeping. */
+@media (prefers-reduced-motion: reduce) {
+  .ab-cap-row,
+  .ab-cap-row::before,
+  .ab-cap-row__t,
+  .ab-cap-row__wrap {
+    transition: none;
+  }
+  .ab-cap-row__prog {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+/* Below this the preview pane has no room beside the rows. The list takes
+   the full width and the pane is dropped — every capability is stated in
+   the rows themselves, which were always the content. */
+@media (max-width: 900px) {
+  .ab-cap-index {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .ab-cap-preview {
+    display: none !important;
+  }
+}
+
+/* The justified header collapses to a single column with both blocks
+   left-aligned — a right-aligned standfirst under a left-aligned title
+   reads as a mistake once they are stacked rather than bracketed. */
+@media (max-width: 900px) {
+  .ab-cap-head,
+  .ab-grid-split {
+    justify-content: start !important;
+  }
+  .ab-cap-head p,
+  .ab-grid-split > p {
+    text-align: left !important;
+    justify-self: start !important;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Contact — skills playground + the ask, side by side.
+   Below this width a split leaves the headline a few characters
+   wide, so the two stack and the playground leads.
+   --------------------------------------------------------------- */
+/* Clears the "Project in mind?" eyebrow above the playground, so the two
+   columns start level with each other rather than with the label. Declared
+   before the media query below so the stacked override wins on source order
+   rather than on an !important. */
+.ab-contact-ask {
+  padding-top: 46px;
+}
+
+@media (max-width: 900px) {
+  .ab-contact-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  /* Stacked, there is no second column to align against — the offset that
+     levels the headline with the physics box would just be a stray gap. */
+  .ab-contact-ask {
+    padding-top: 0;
+  }
+}
+
+/* Grabbing a pill should read as grabbing it. */
+.ab-skills-box [data-pill]:active {
+  cursor: grabbing;
+}
+
+/* ---------------------------------------------------------------
+   Pill buttons (contact)
+
+   Most pill buttons on the site shipped with no hover state at all —
+   nothing confirmed they were interactive, the same gap the footer
+   links had. This is the shared treatment.
+
+   The move is a fill that wipes in from the left on a scaled
+   pseudo-element, which is the language already used by .ab-flink,
+   .ab-nav-login and .ab-tile__edge — a transform on the compositor
+   rather than an animated background-position or width, so it costs
+   no layout or paint work.
+
+   Label and any trailing glyph sit above the fill on their own
+   stacking context; without the explicit z-index the fill paints over
+   the text since both are positioned.
+   --------------------------------------------------------------- */
+.ab-btn {
+  --btn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color 0.4s var(--btn-ease), border-color 0.45s var(--btn-ease),
+    transform 0.45s var(--btn-ease), box-shadow 0.45s var(--btn-ease);
+}
+.ab-btn > * {
+  position: relative;
+  z-index: 1;
+}
+.ab-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--btn-fill, #9a78f5);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.55s var(--btn-ease);
+}
+.ab-btn:hover::before,
+.ab-btn:focus-visible::before {
+  transform: scaleX(1);
+}
+/* Lifts a touch on hover, and presses back down on click so the
+   control acknowledges the press rather than only the approach. */
+.ab-btn:hover,
+.ab-btn:focus-visible {
+  transform: translateY(-2px);
+}
+.ab-btn:active {
+  transform: translateY(0);
+  transition-duration: 0.08s;
+}
+.ab-btn:focus-visible {
+  outline: 2px solid #9a78f5;
+  outline-offset: 3px;
+}
+
+/* Solid brand pill: the fill wipes to cream and the label flips to ink,
+   so the button inverts rather than merely tinting. */
+.ab-btn--solid {
+  --btn-fill: #f7f6f3;
+}
+.ab-btn--solid:hover,
+.ab-btn--solid:focus-visible {
+  color: #0e0e0e;
+  box-shadow: 0 14px 30px rgba(80, 30, 189, 0.28);
+}
+
+/* Outlined pill on dark ground: fills with brand and the hairline
+   border resolves into the fill it now sits on. */
+.ab-btn--ghost {
+  --btn-fill: #501ebd;
+}
+.ab-btn--ghost:hover,
+.ab-btn--ghost:focus-visible {
+  color: #ffffff;
+  border-color: #9a78f5;
+  box-shadow: 0 14px 30px rgba(80, 30, 189, 0.22);
+}
+
+/* Light pill on the carousel's dark backdrop. Fills with brand and the
+   label — text and arrow both, via currentColor — goes to white. */
+.ab-btn--invert {
+  --btn-fill: #501ebd;
+}
+.ab-btn--invert:hover,
+.ab-btn--invert:focus-visible {
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(80, 30, 189, 0.34);
+}
+
+/* Reduced motion: keep the colour change, drop the wipe and the lift.
+   The state still reads; nothing travels. */
+@media (prefers-reduced-motion: reduce) {
+  .ab-btn,
+  .ab-btn::before {
+    transition: color 0.15s linear, border-color 0.15s linear;
+  }
+  .ab-btn::before {
+    transition: none;
+  }
+  .ab-btn:hover::before,
+  .ab-btn:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .ab-btn:hover,
+  .ab-btn:focus-visible,
+  .ab-btn:active {
+    transform: none;
   }
 }

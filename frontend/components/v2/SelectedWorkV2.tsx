@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { displayFont } from "./tokens";
+import SectionHeading from "./SectionHeading";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -97,6 +98,7 @@ export default function SelectedWorkV2({ data }: SelectedWorkV2Props) {
       id="work"
       ref={sectionRef}
       data-screen-label="Selected work"
+      data-nav-tone="dark"
       style={{ position: "relative", height: `${(projects.length + 1) * 100}vh`, background: "#0E0E0E", color: "#F7F6F3" }}
     >
       <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
@@ -137,11 +139,8 @@ export default function SelectedWorkV2({ data }: SelectedWorkV2Props) {
         {/* Fixed chrome: header + progress bar */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 20, padding: "clamp(70px,10vh,110px) clamp(18px,3.6vw,60px) clamp(18px,3vh,34px)", pointerEvents: "none" }}>
           <div>
-            <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "#9A78F5", marginBottom: 14 }}>
-              (03) SELECTED WORK
-            </span>
             <h2 style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(32px,5.2vw,78px)", lineHeight: 0.94, letterSpacing: "-.04em" }}>
-              Things we made
+              <SectionHeading>Things we made</SectionHeading>
             </h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 220, flex: 1, maxWidth: 420, paddingBottom: 10 }}>

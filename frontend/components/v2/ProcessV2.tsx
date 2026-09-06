@@ -1,5 +1,6 @@
 import React from "react";
 import { displayFont, LINE, MUTED, BODY_MUTED } from "./tokens";
+import SectionHeading from "./SectionHeading";
 
 interface Step {
   id: string;
@@ -17,13 +18,10 @@ export default function ProcessV2({ data }: ProcessV2Props) {
 
   return (
     <section data-proc-sec="1" data-screen-label="Process" style={{ position: "relative", padding: "clamp(70px,11vh,130px) 0" }}>
-      <div style={{ maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)", display: "grid", gridTemplateColumns: "minmax(0,.9fr) minmax(0,2.1fr)", gap: "clamp(28px,5vw,80px)", alignItems: "start" }}>
-        <div style={{ position: "sticky", top: 120 }}>
-          <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: MUTED, marginBottom: 14 }}>
-            (04) PROCESS
-          </span>
+      <div className="ab-grid-split" style={{ maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)", display: "grid", gridTemplateColumns: "minmax(0,.9fr) minmax(0,2.1fr)", gap: "clamp(28px,5vw,80px)", alignItems: "start" }}>
+        <div className="ab-sticky-head" style={{ position: "sticky", top: 120 }}>
           <h2 style={{ margin: "0 0 22px", fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(32px,4.6vw,68px)", lineHeight: 0.94, letterSpacing: "-.04em" }}>
-            How it runs
+            <SectionHeading>How it runs</SectionHeading>
           </h2>
           <p style={{ margin: 0, maxWidth: "30ch", fontSize: 15, lineHeight: 1.6, color: "#6B7280" }}>
             Four steps, no proposal theatre. You always know what is being made and what it costs.

@@ -1,6 +1,7 @@
 import React from "react";
 import { PersonCard } from "./StudioV2";
 import { displayFont } from "./tokens";
+import SectionHeading from "./SectionHeading";
 
 interface Role {
   title: string;
@@ -32,13 +33,10 @@ export default function CareersV2({ data, hiringTeam = [] }: CareersV2Props) {
       style={{ position: "relative", margin: "clamp(30px,5vh,60px) clamp(18px,3.6vw,60px)", borderRadius: 28, overflow: "hidden", background: "#501EBD", color: "#ffffff", scrollMarginTop: 80 }}
     >
       <div style={{ position: "relative", padding: "clamp(40px,7vh,86px) clamp(22px,3.4vw,56px)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.15fr) minmax(0,1fr)", gap: "clamp(28px,4vw,64px)", alignItems: "end" }}>
+        <div className="ab-grid-split" style={{ display: "grid", gridTemplateColumns: "minmax(0,1.15fr) minmax(0,1fr)", gap: "clamp(28px,4vw,64px)", alignItems: "end" }}>
           <div>
-            <span data-rv="eyebrow" style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "rgba(255,255,255,.72)", marginBottom: 16 }}>
-              (07) {data?.badge || "CAREERS"}
-            </span>
             <h2 style={{ margin: "0 0 22px", fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(32px,5.4vw,80px)", lineHeight: 0.94, letterSpacing: "-.04em" }}>
-              <span data-rv="line"><span>{data?.title || "We are hiring"}</span></span>
+              <span data-rv="line"><span><SectionHeading tone="dark">{data?.title || "We are hiring"}</SectionHeading></span></span>
             </h2>
             <p data-rv="up" style={{ ["--rv-i" as string]: 2, margin: "0 0 26px", maxWidth: "40ch", fontSize: "clamp(15px,1.25vw,19px)", lineHeight: 1.6, color: "rgba(255,255,255,.82)" }}>
               {data?.description || "Send the project you are proudest of. If it is good we will find a seat for you, listed role or not."}
@@ -73,7 +71,7 @@ export default function CareersV2({ data, hiringTeam = [] }: CareersV2Props) {
               <span style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: ".26em", color: "rgba(255,255,255,.72)", marginBottom: 16 }}>
                 MEET THE HIRING TEAM
               </span>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 14 }}>
+              <div className="ab-grid-pair" style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 14 }}>
                 {hiringTeam.map((member, i) => (
                   <PersonCard key={i} member={member} compact />
                 ))}

@@ -192,4 +192,23 @@ export const contactContent = {
   description: "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.",
   email: "abstraktcreation@gmail.com",
   phone: "+977 9823901866",
+  skills: [
+    { label: "React", accent: true },
+    { label: "Next.js", accent: false },
+    { label: "Web Solutions", accent: true },
+    { label: "API Integration", accent: true },
+    { label: "Dashboards", accent: false },
+    { label: "3D & Animation", accent: false },
+    { label: "Social Media", accent: true },
+    { label: "Music Production", accent: true },
+    { label: "Video Production", accent: false },
+    { label: "Graphic Design", accent: true },
+    { label: "UI/UX Design", accent: true },
+    { label: "System Architecture", accent: false },
+    { label: "Digital Marketing", accent: false },
+    { label: "Creative", accent: false },
+    { label: "Motion Design", accent: true },
+    { label: "Brand Systems", accent: false },
+  ],
 };
+

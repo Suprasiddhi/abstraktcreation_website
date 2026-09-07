@@ -1,6 +1,6 @@
 import React from "react";
 import { displayFont } from "./tokens";
-import SkillsPhysics from "./SkillsPhysics";
+import SkillsPhysics, { SkillPill } from "./SkillsPhysics";
 
 /**
  * Contact, with the skills playground beside it.
@@ -10,12 +10,13 @@ import SkillsPhysics from "./SkillsPhysics";
  * mind?" question the heading asks, and putting the two in one band means the
  * reader gets the capability list and the way to act on it in the same look.
  */
-interface ContactData {
+export interface ContactData {
   headlineLine1?: string;
   headlineLine2?: string;
   description?: string;
   email?: string;
   phone?: string;
+  skills?: SkillPill[];
 }
 
 interface ContactV2Props {
@@ -56,7 +57,7 @@ export default function ContactV2({ data }: ContactV2Props) {
                 Project in mind?
               </span>
             </div>
-            <SkillsPhysics />
+            <SkillsPhysics skills={data?.skills} />
             <p style={{ margin: "14px 2px 0", fontSize: 13, color: "#6E6E6A" }}>
               Everything we handle, in one box. Drag them around.
             </p>

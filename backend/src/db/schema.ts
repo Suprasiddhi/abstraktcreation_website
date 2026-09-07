@@ -170,3 +170,12 @@ export const contactInfo = pgTable("contact_info", {
     phone: varchar("phone", { length: 255 }).notNull().default("+977 9823901866"),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// 16. Contact Skills / CTA Pills Table
+export const contactSkills = pgTable("contact_skills", {
+    id: serial("id").primaryKey(),
+    label: varchar("label", { length: 255 }).notNull(),
+    accent: boolean("accent").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

@@ -611,6 +611,7 @@ export default function AdminPage() {
                 updateSectionData("contact", newData);
                 setIsEditing(true);
               }}
+              onStartEditing={() => setIsEditing(true)}
               disabled={!isEditing}
             />
           )}

@@ -26,8 +26,14 @@ import { BRAND, displayFont } from "./tokens";
  * uses; the difference is only in how much of it is here.
  */
 
-/** The pills, in the order they drop. Taken from the reference recording. */
-const SKILLS: { label: string; accent?: boolean }[] = [
+export interface SkillPill {
+  id?: number | string;
+  label: string;
+  accent?: boolean;
+}
+
+/** The default pills, in the order they drop. Taken from the reference recording. */
+export const DEFAULT_SKILLS: SkillPill[] = [
   { label: "React", accent: true },
   { label: "Next.js" },
   { label: "Web Solutions", accent: true },
@@ -45,6 +51,7 @@ const SKILLS: { label: string; accent?: boolean }[] = [
   { label: "Motion Design", accent: true },
   { label: "Brand Systems" },
 ];
+
 
 const GRAVITY = 2100; // px/s²
 const RESTITUTION = 0.16; // bounce; low so the pile settles rather than jitters
@@ -124,7 +131,13 @@ function segClosest(
   return { s, t };
 }
 
-export default function SkillsPhysics() {
+export interface SkillsPhysicsProps {
+  skills?: SkillPill[];
+}
+
+export default function SkillsPhysics({ skills }: SkillsPhysicsProps = {}) {
+  const activeSkills = skills && skills.length > 0 ? skills : DEFAULT_SKILLS;
+  const skillsKey = activeSkills.map(s => `${s.label}:${!!s.accent}`).join("|");
   const boxRef = useRef<HTMLDivElement>(null);
   const bodiesRef = useRef<Body[]>([]);
   const rafRef = useRef<number | null>(null);
@@ -166,8 +179,8 @@ export default function SkillsPhysics() {
     // Build bodies from the DOM nodes React rendered.
     const els = Array.from(box.querySelectorAll<HTMLElement>("[data-pill]"));
     bodiesRef.current = els.map((el, i) => ({
-      label: SKILLS[i]?.label || "",
-      accent: !!SKILLS[i]?.accent,
+      label: activeSkills[i]?.label || "",
+      accent: !!activeSkills[i]?.accent,
       x: 0,
       y: 0,
       vx: 0,
@@ -531,7 +544,7 @@ export default function SkillsPhysics() {
       window.removeEventListener("pointercancel", onPointerUp);
       window.removeEventListener("resize", onResize);
     };
-  }, [measure]);
+  }, [measure, skillsKey]);
 
   return (
     <div
@@ -549,9 +562,9 @@ export default function SkillsPhysics() {
         touchAction: "pan-y",
       }}
     >
-      {SKILLS.map((s) => (
+      {activeSkills.map((s, idx) => (
         <span
-          key={s.label}
+          key={`${s.label}-${idx}`}
           data-pill
           style={{
             position: "absolute",

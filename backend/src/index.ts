@@ -23,7 +23,8 @@ import {
   testimonials,
   careersMetadata,
   careersRoles,
-  contactInfo
+  contactInfo,
+  contactSkills
 } from './db/schema';
 
 const app = express();
@@ -104,6 +105,15 @@ async function initDbSchema() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_skills (
+        id SERIAL PRIMARY KEY,
+        label VARCHAR(255) NOT NULL,
+        accent BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
 
     // Ensure default row for contact_info
     await pool.query(`
@@ -111,6 +121,30 @@ async function initDbSchema() {
       VALUES (1, 'Let''s make', 'the thing.', 'Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.', 'abstraktcreation@gmail.com', '+977 9823901866')
       ON CONFLICT (id) DO NOTHING;
     `);
+
+    // Ensure default contact_skills if empty
+    const skillsRes = await pool.query('SELECT COUNT(*) FROM contact_skills;');
+    if (parseInt(skillsRes.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO contact_skills (label, accent, sort_order) VALUES
+        ('React', true, 0),
+        ('Next.js', false, 1),
+        ('Web Solutions', true, 2),
+        ('API Integration', true, 3),
+        ('Dashboards', false, 4),
+        ('3D & Animation', false, 5),
+        ('Social Media', true, 6),
+        ('Music Production', true, 7),
+        ('Video Production', false, 8),
+        ('Graphic Design', true, 9),
+        ('UI/UX Design', true, 10),
+        ('System Architecture', false, 11),
+        ('Digital Marketing', false, 12),
+        ('Creative', false, 13),
+        ('Motion Design', true, 14),
+        ('Brand Systems', false, 15);
+      `);
+    }
 
     // Ensure default row for careers_metadata
     await pool.query(`
@@ -474,6 +508,33 @@ async function seedDatabase() {
       });
     }
 
+    // 16. Seed Contact Skills / CTA Pills
+    const contactSkillsCount = await db.select().from(contactSkills);
+    if (contactSkillsCount.length === 0) {
+      console.log("Seeding default Contact Skills pills...");
+      const defaultSkills = [
+        { label: "React", accent: true, sortOrder: 0 },
+        { label: "Next.js", accent: false, sortOrder: 1 },
+        { label: "Web Solutions", accent: true, sortOrder: 2 },
+        { label: "API Integration", accent: true, sortOrder: 3 },
+        { label: "Dashboards", accent: false, sortOrder: 4 },
+        { label: "3D & Animation", accent: false, sortOrder: 5 },
+        { label: "Social Media", accent: true, sortOrder: 6 },
+        { label: "Music Production", accent: true, sortOrder: 7 },
+        { label: "Video Production", accent: false, sortOrder: 8 },
+        { label: "Graphic Design", accent: true, sortOrder: 9 },
+        { label: "UI/UX Design", accent: true, sortOrder: 10 },
+        { label: "System Architecture", accent: false, sortOrder: 11 },
+        { label: "Digital Marketing", accent: false, sortOrder: 12 },
+        { label: "Creative", accent: false, sortOrder: 13 },
+        { label: "Motion Design", accent: true, sortOrder: 14 },
+        { label: "Brand Systems", accent: false, sortOrder: 15 }
+      ];
+      for (const s of defaultSkills) {
+        await db.insert(contactSkills).values(s);
+      }
+    }
+
     console.log("Database seed verification complete.");
   } catch (error) {
     console.error("Database seed failed. Make sure to run 'pnpm run db:push'.", error);
@@ -504,7 +565,8 @@ app.get('/api/content', async (req, res) => {
       testimonialRows,
       careersMetaRows,
       careersRoleRows,
-      contactRows
+      contactRows,
+      contactSkillRows
     ] = await Promise.all([
       db.select().from(hero),
       db.select().from(position),
@@ -520,7 +582,8 @@ app.get('/api/content', async (req, res) => {
       db.select().from(testimonials),
       db.select().from(careersMetadata),
       db.select().from(careersRoles),
-      db.select().from(contactInfo)
+      db.select().from(contactInfo),
+      db.select().from(contactSkills)
     ]);
 
     // Format & sort arrays
@@ -709,7 +772,14 @@ app.get('/api/content', async (req, res) => {
       headlineLine2: contactRows[0]?.headlineLine2 || "the thing.",
       description: contactRows[0]?.description || "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.",
       email: contactRows[0]?.email || "abstraktcreation@gmail.com",
-      phone: contactRows[0]?.phone || "+977 9823901866"
+      phone: contactRows[0]?.phone || "+977 9823901866",
+      skills: (contactSkillRows || [])
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(s => ({
+          id: s.id,
+          label: s.label,
+          accent: Boolean(s.accent)
+        }))
     };
 
     const responseData = {
@@ -859,6 +929,7 @@ app.post('/api/content/clear', async (req, res) => {
         updatedAt: new Date()
       })
       .where(eq(contactInfo.id, 1));
+    await db.delete(contactSkills);
 
     console.log("Database cleared successfully by admin.");
     cachedContentData = null;
@@ -1139,6 +1210,20 @@ app.post('/api/content/:id', async (req, res) => {
           updatedAt: new Date()
         })
         .where(eq(contactInfo.id, 1));
+
+      if (Array.isArray(contentBody.skills)) {
+        await db.delete(contactSkills);
+        for (let i = 0; i < contentBody.skills.length; i++) {
+          const s = contentBody.skills[i];
+          if (s && s.label) {
+            await db.insert(contactSkills).values({
+              label: s.label,
+              accent: Boolean(s.accent),
+              sortOrder: i
+            });
+          }
+        }
+      }
     } else {
       return res.status(400).json({ error: `Invalid section ID: '${id}'` });
     }

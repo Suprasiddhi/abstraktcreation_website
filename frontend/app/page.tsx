@@ -114,7 +114,7 @@ export default function Home() {
         if (Array.isArray(data?.stats) && data.stats.length) setStats(data.stats);
         if (Array.isArray(data?.testimonials) && data.testimonials.length) setTestimonials(data.testimonials);
         if (data?.careers?.roles || data?.careers?.title) setCareers(data.careers);
-        if (data?.contact?.email || data?.contact?.headlineLine1) setContact(data.contact);
+        if (data?.contact?.email || data?.contact?.headlineLine1 || data?.contact?.skills) setContact(data.contact);
       } catch (e) {}
     }
 
@@ -142,7 +142,7 @@ export default function Home() {
         if (Array.isArray(data?.stats) && data.stats.length) setStats(data.stats);
         if (Array.isArray(data?.testimonials) && data.testimonials.length) setTestimonials(data.testimonials);
         if (data?.careers?.roles || data?.careers?.title) setCareers(data.careers);
-        if (data?.contact?.email || data?.contact?.headlineLine1) setContact(data.contact);
+        if (data?.contact?.email || data?.contact?.headlineLine1 || data?.contact?.skills) setContact(data.contact);
 
         try {
           sessionStorage.setItem("abstrakt_content", JSON.stringify(data));

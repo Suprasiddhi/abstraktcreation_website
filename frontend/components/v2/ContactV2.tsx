@@ -1,6 +1,6 @@
 import React from "react";
 import { displayFont } from "./tokens";
-import SkillsPhysics from "./SkillsPhysics";
+import SkillsPhysics, { SkillPill } from "./SkillsPhysics";
 
 /**
  * Contact, with the skills playground beside it.
@@ -10,7 +10,26 @@ import SkillsPhysics from "./SkillsPhysics";
  * mind?" question the heading asks, and putting the two in one band means the
  * reader gets the capability list and the way to act on it in the same look.
  */
-export default function ContactV2() {
+export interface ContactData {
+  headlineLine1?: string;
+  headlineLine2?: string;
+  description?: string;
+  email?: string;
+  phone?: string;
+  skills?: SkillPill[];
+}
+
+interface ContactV2Props {
+  data?: ContactData;
+}
+
+export default function ContactV2({ data }: ContactV2Props) {
+  const line1 = data?.headlineLine1 || "Let's make";
+  const line2 = data?.headlineLine2 || "the thing.";
+  const description = data?.description || "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.";
+  const email = data?.email || "abstraktcreation@gmail.com";
+  const phone = data?.phone || "+977 9823901866";
+
   return (
     <section
       id="contact"
@@ -24,7 +43,6 @@ export default function ContactV2() {
         {/* Playground left, the whole ask right. Collapses to one column below
             the breakpoint in v2-animations.css, where a split would leave the
             headline about six characters wide.
-
             `start` rather than `center`: the right column is now the taller of
             the two, and centring made the playground float against the
             headline's midpoint with uneven space above and below it. */}
@@ -39,67 +57,55 @@ export default function ContactV2() {
                 Project in mind?
               </span>
             </div>
-            <SkillsPhysics />
+            <SkillsPhysics skills={data?.skills} />
             <p style={{ margin: "14px 2px 0", fontSize: 13, color: "#6E6E6A" }}>
               Everything we handle, in one box. Drag them around.
             </p>
           </div>
 
-          {/* The headline, the line under it and the two contact buttons are
-              one column now. They used to be split: headline here, standfirst
-              and buttons in a full-width row beneath the playground — which
-              left the ask stranded a screen-width away from the sentence that
-              set it up, and stretched a 44ch paragraph across the full 1680px
-              container.
-
-              The headline is no longer itself a mailto link. It sat inside an
-              <a>, and the buttons cannot be nested inside another anchor
-              without producing invalid markup; the email button directly below
-              is the same destination, so nothing is lost. */}
-          {/* Offset to clear the eyebrow above the playground, so the headline's
-              cap-height starts level with the top of the physics box rather
-              than the label above it. Dropped at the stacked breakpoint, where
-              there is no second column to align to. */}
           <div className="ab-contact-ask">
             <h2
               style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(40px,6.4vw,116px)", lineHeight: 0.9, letterSpacing: "-.045em", color: "#F7F6F3" }}
             >
               <span data-rv="line" style={{ ["--rv-i" as string]: 1 }}>
                 <span>
-                  <span style={{ color: "#9A78F5" }}>Let&apos;s</span> make
+                  {line1.includes("Let's") ? (
+                    <>
+                      <span style={{ color: "#9A78F5" }}>Let&apos;s</span>
+                      {line1.replace("Let's", "")}
+                    </>
+                  ) : (
+                    line1
+                  )}
                 </span>
               </span>
-              <span data-rv="line" style={{ ["--rv-i" as string]: 2 }}><span>the thing.</span></span>
+              <span data-rv="line" style={{ ["--rv-i" as string]: 2 }}><span>{line2}</span></span>
             </h2>
 
             <p
               data-rv="up"
               style={{ ["--rv-i" as string]: 4, margin: "clamp(22px,3.4vh,34px) 0 0", maxWidth: "40ch", fontSize: "clamp(15px,1.15vw,18px)", lineHeight: 1.6, color: "#9C9B95" }}
             >
-              Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.
+              {description}
             </p>
 
             <div
               data-rv="up"
               style={{ ["--rv-i" as string]: 5, display: "flex", flexWrap: "wrap", gap: 10, marginTop: "clamp(22px,3.2vh,32px)" }}
             >
-              {/* The label is wrapped in its own span: .ab-btn lifts every
-                  direct child above the fill pseudo-element, and a bare text
-                  node cannot be raised that way — it would be painted over as
-                  the fill wipes across. */}
               <a
                 className="ab-btn ab-btn--solid"
-                href="mailto:abstraktcreation@gmail.com"
+                href={`mailto:${email}`}
                 style={{ display: "inline-flex", alignItems: "center", height: 56, padding: "0 30px", borderRadius: 999, background: "#501EBD", color: "#ffffff", fontSize: 16, fontWeight: 600 }}
               >
-                <span>abstraktcreation@gmail.com</span>
+                <span>{email}</span>
               </a>
               <a
                 className="ab-btn ab-btn--ghost"
-                href="tel:+9779823901866"
+                href={`tel:${phone.replace(/\s+/g, "")}`}
                 style={{ display: "inline-flex", alignItems: "center", height: 56, padding: "0 30px", borderRadius: 999, border: "1px solid #2A2A2A", color: "#F7F6F3", fontSize: 16, fontWeight: 600 }}
               >
-                <span>+977 9823901866</span>
+                <span>{phone}</span>
               </a>
             </div>
           </div>

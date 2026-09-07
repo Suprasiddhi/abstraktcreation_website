@@ -13,13 +13,21 @@ import FaqForm from "./FaqForm";
 import ProcessForm from "./ProcessForm";
 import PeopleForm from "./PeopleForm";
 import LogosForm from "./LogosForm";
+import StatsForm from "./StatsForm";
+import TestimonialsForm from "./TestimonialsForm";
+import CareersForm from "./CareersForm";
+import ContactForm from "./ContactForm";
+
 import ProjectModal from "./ProjectModal";
 import LogoModal from "./LogoModal";
 import FaqModal from "./FaqModal";
 import PeopleModal from "./PeopleModal";
 import ServiceModal from "./ServiceModal";
+import StatModal from "./StatModal";
+import TestimonialModal from "./TestimonialModal";
+import RoleModal from "./RoleModal";
 
-type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "process" | "people" | "faq";
+type Tab = "hero" | "logos" | "position" | "capabilities" | "work" | "stats" | "process" | "people" | "testimonials" | "careers" | "faq" | "contact";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -40,12 +48,15 @@ export default function AdminPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Add Project / Add Logo / Add FAQ / Add People / Add Service Modal state
+  // Modal states
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showAddLogoModal, setShowAddLogoModal] = useState(false);
   const [showAddFaqModal, setShowAddFaqModal] = useState(false);
   const [showAddPeopleModal, setShowAddPeopleModal] = useState(false);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [showAddStatModal, setShowAddStatModal] = useState(false);
+  const [showAddTestimonialModal, setShowAddTestimonialModal] = useState(false);
+  const [showAddRoleModal, setShowAddRoleModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -320,7 +331,7 @@ export default function AdminPage() {
           <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-neutral-400 uppercase p-2 block border-b border-neutral-100 mb-2">
             SECTIONS LIST
           </span>
-          {(["hero", "logos", "position", "capabilities", "work", "faq", "process", "people"] as Tab[]).map((tab) => {
+          {(["hero", "logos", "position", "capabilities", "work", "stats", "process", "people", "testimonials", "careers", "faq", "contact"] as Tab[]).map((tab) => {
             const isActive = activeTab === tab;
             return (
               <button
@@ -337,7 +348,23 @@ export default function AdminPage() {
                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-850"
                 }`}
               >
-                {tab === "position" ? "Statement" : tab === "work" ? "Selected Work" : tab === "logos" ? "Logos" : tab === "capabilities" ? "Service" : tab}
+                {tab === "position"
+                  ? "Statement"
+                  : tab === "work"
+                  ? "Selected Work"
+                  : tab === "logos"
+                  ? "Logos"
+                  : tab === "capabilities"
+                  ? "Service"
+                  : tab === "stats"
+                  ? "Stats"
+                  : tab === "testimonials"
+                  ? "Testimonials"
+                  : tab === "careers"
+                  ? "Careers"
+                  : tab === "contact"
+                  ? "Contact"
+                  : tab}
               </button>
             );
           })}
@@ -360,7 +387,21 @@ export default function AdminPage() {
           <div className="flex items-center justify-between border-b border-neutral-100 pb-5 mb-8">
             <div>
               <h2 className="text-xl font-black uppercase text-foreground leading-none">
-                EDIT {activeTab === "position" ? "Brand Statement" : activeTab === "work" ? "Selected Work" : activeTab === "capabilities" ? "Service" : activeTab}
+                EDIT {activeTab === "position"
+                  ? "Brand Statement"
+                  : activeTab === "work"
+                  ? "Selected Work"
+                  : activeTab === "capabilities"
+                  ? "Service"
+                  : activeTab === "stats"
+                  ? "Key Metrics"
+                  : activeTab === "testimonials"
+                  ? "Ratings & Reviews"
+                  : activeTab === "careers"
+                  ? "Careers & Roles"
+                  : activeTab === "contact"
+                  ? "Contact Details"
+                  : activeTab}
               </h2>
               <p className="text-xs text-neutral-400 mt-1 font-mono uppercase tracking-wider">
                 {isEditing ? "Editing Mode — changes are unsaved" : "View Mode — content is locked"}
@@ -398,6 +439,36 @@ export default function AdminPage() {
                   className="py-[9px] px-6 font-bold text-[13px]"
                 >
                   + Add Logo
+                </Button>
+              ) : activeTab === "stats" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddStatModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add Metric
+                </Button>
+              ) : activeTab === "testimonials" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddTestimonialModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add Review
+                </Button>
+              ) : activeTab === "careers" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowAddRoleModal(true);
+                  }}
+                  className="py-[9px] px-6 font-bold text-[13px]"
+                >
+                  + Add Position
                 </Button>
               ) : activeTab === "faq" ? (
                 <Button
@@ -504,6 +575,45 @@ export default function AdminPage() {
 
           {activeTab === "logos" && content?.logos && (
             <LogosForm data={content.logos} onChange={(newData) => updateSectionData("logos", newData)} onStartEditing={() => setIsEditing(true)} disabled={!isEditing} />
+          )}
+
+          {activeTab === "stats" && content?.stats && (
+            <StatsForm
+              data={content.stats}
+              onChange={(newData) => updateSectionData("stats", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
+          )}
+
+          {activeTab === "testimonials" && content?.testimonials && (
+            <TestimonialsForm
+              data={content.testimonials}
+              onChange={(newData) => updateSectionData("testimonials", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
+          )}
+
+          {activeTab === "careers" && content?.careers && (
+            <CareersForm
+              data={content.careers}
+              onChange={(newData) => updateSectionData("careers", newData)}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
+          )}
+
+          {activeTab === "contact" && content?.contact && (
+            <ContactForm
+              data={content.contact}
+              onChange={(newData) => {
+                updateSectionData("contact", newData);
+                setIsEditing(true);
+              }}
+              onStartEditing={() => setIsEditing(true)}
+              disabled={!isEditing}
+            />
           )}
 
           {/* Footer Save Row */}
@@ -651,6 +761,57 @@ export default function AdminPage() {
             setShowAddServiceModal(false);
           }}
           onClose={() => setShowAddServiceModal(false)}
+        />
+      )}
+
+      {/* Add Stat Modal */}
+      {showAddStatModal && (
+        <StatModal
+          onSave={(newStatData) => {
+            const list = [...(content?.stats || []), newStatData];
+            setContent((prev: any) => ({
+              ...prev,
+              stats: list,
+            }));
+            setIsEditing(true);
+            setShowAddStatModal(false);
+          }}
+          onClose={() => setShowAddStatModal(false)}
+        />
+      )}
+
+      {/* Add Testimonial Modal */}
+      {showAddTestimonialModal && (
+        <TestimonialModal
+          onSave={(newTestimonialData) => {
+            const list = [...(content?.testimonials || []), newTestimonialData];
+            setContent((prev: any) => ({
+              ...prev,
+              testimonials: list,
+            }));
+            setIsEditing(true);
+            setShowAddTestimonialModal(false);
+          }}
+          onClose={() => setShowAddTestimonialModal(false)}
+        />
+      )}
+
+      {/* Add Role Modal */}
+      {showAddRoleModal && (
+        <RoleModal
+          onSave={(newRoleData) => {
+            const list = [...(content?.careers?.roles || []), newRoleData];
+            setContent((prev: any) => ({
+              ...prev,
+              careers: {
+                ...prev.careers,
+                roles: list,
+              },
+            }));
+            setIsEditing(true);
+            setShowAddRoleModal(false);
+          }}
+          onClose={() => setShowAddRoleModal(false)}
         />
       )}
     </div>

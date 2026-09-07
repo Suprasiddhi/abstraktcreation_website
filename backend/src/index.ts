@@ -18,7 +18,13 @@ import {
   processSteps,
   peopleMetadata,
   teamMembers,
-  logos
+  logos,
+  companyStats,
+  testimonials,
+  careersMetadata,
+  careersRoles,
+  contactInfo,
+  contactSkills
 } from './db/schema';
 
 const app = express();
@@ -45,7 +51,144 @@ async function initDbSchema() {
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS original_avatar_url TEXT NOT NULL DEFAULT \'\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS socials TEXT NOT NULL DEFAULT \'[]\';');
     await pool.query('ALTER TABLE team_members ADD COLUMN IF NOT EXISTS is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE;');
-    console.log("Database schema migration: successfully ensured all columns on capabilities, team_members and projects tables.");
+
+    // Ensure new dynamic tables exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS company_stats (
+        id SERIAL PRIMARY KEY,
+        value INTEGER NOT NULL DEFAULT 0,
+        suffix VARCHAR(50) NOT NULL DEFAULT '',
+        display VARCHAR(50) NOT NULL DEFAULT '',
+        label VARCHAR(255) NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS testimonials (
+        id SERIAL PRIMARY KEY,
+        quote TEXT NOT NULL DEFAULT '',
+        author_name VARCHAR(255) NOT NULL DEFAULT '',
+        author_role VARCHAR(255) NOT NULL DEFAULT '',
+        theme VARCHAR(20) NOT NULL DEFAULT 'light',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS careers_metadata (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        badge VARCHAR(255) NOT NULL DEFAULT 'CAREERS',
+        title VARCHAR(255) NOT NULL DEFAULT 'We are hiring',
+        description TEXT NOT NULL DEFAULT '',
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS careers_roles (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL DEFAULT '',
+        location VARCHAR(255) NOT NULL DEFAULT '',
+        type VARCHAR(100) NOT NULL DEFAULT 'Full-time',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_info (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        headline_line1 VARCHAR(255) NOT NULL DEFAULT 'Let''s make',
+        headline_line2 VARCHAR(255) NOT NULL DEFAULT 'the thing.',
+        description TEXT NOT NULL DEFAULT '',
+        email VARCHAR(255) NOT NULL DEFAULT 'abstraktcreation@gmail.com',
+        phone VARCHAR(255) NOT NULL DEFAULT '+977 9823901866',
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_skills (
+        id SERIAL PRIMARY KEY,
+        label VARCHAR(255) NOT NULL,
+        accent BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Ensure default row for contact_info
+    await pool.query(`
+      INSERT INTO contact_info (id, headline_line1, headline_line2, description, email, phone)
+      VALUES (1, 'Let''s make', 'the thing.', 'Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.', 'abstraktcreation@gmail.com', '+977 9823901866')
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    // Ensure default contact_skills if empty
+    const skillsRes = await pool.query('SELECT COUNT(*) FROM contact_skills;');
+    if (parseInt(skillsRes.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO contact_skills (label, accent, sort_order) VALUES
+        ('React', true, 0),
+        ('Next.js', false, 1),
+        ('Web Solutions', true, 2),
+        ('API Integration', true, 3),
+        ('Dashboards', false, 4),
+        ('3D & Animation', false, 5),
+        ('Social Media', true, 6),
+        ('Music Production', true, 7),
+        ('Video Production', false, 8),
+        ('Graphic Design', true, 9),
+        ('UI/UX Design', true, 10),
+        ('System Architecture', false, 11),
+        ('Digital Marketing', false, 12),
+        ('Creative', false, 13),
+        ('Motion Design', true, 14),
+        ('Brand Systems', false, 15);
+      `);
+    }
+
+    // Ensure default row for careers_metadata
+    await pool.query(`
+      INSERT INTO careers_metadata (id, badge, title, description)
+      VALUES (1, 'CAREERS', 'We are hiring', 'Send the project you are proudest of. If it is good we will find a seat for you, listed role or not.')
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    // Ensure default company_stats if empty
+    const statsRes = await pool.query('SELECT COUNT(*) FROM company_stats;');
+    if (parseInt(statsRes.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO company_stats (value, suffix, display, label, sort_order) VALUES
+        (30, '+', '', 'Projects Delivered', 0),
+        (15, '+', '', 'Clients Worked With', 1),
+        (6, '+', '', 'Creative Capabilities', 2),
+        (0, '', '∞', 'Ideas Turned Real', 3);
+      `);
+    }
+
+    // Ensure default testimonials if empty
+    const testRes = await pool.query('SELECT COUNT(*) FROM testimonials;');
+    if (parseInt(testRes.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO testimonials (quote, author_name, author_role, theme, sort_order) VALUES
+        ('They rebuilt the site and the brand in the same pass, so nothing felt bolted on. First month after launch, enquiries doubled.', 'Kiran Gurung', 'Founder, Vertex', 'light', 0),
+        ('The build is stable and the handover was clean. Our own team picked it up in a week without a single call.', 'Sushma Bhandari', 'Product Lead, Kinetic', 'light', 1),
+        ('We came for a video and left with a whole system: identity, site, launch campaign. One team, one invoice, one standard.', 'Daniel Reyes', 'CMO, Apex', 'light', 2),
+        ('Timelines held. That is rarer than it should be, and it is why we are on the third project with them.', 'Priya Adhikari', 'Director, Spectrum', 'dark', 3);
+      `);
+    }
+
+    // Ensure default careers_roles if empty
+    const rolesRes = await pool.query('SELECT COUNT(*) FROM careers_roles;');
+    if (parseInt(rolesRes.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO careers_roles (title, location, type, sort_order) VALUES
+        ('Frontend Engineer', 'Lalitpur', 'Full-time', 0),
+        ('Motion Designer', 'Hybrid', 'Full-time', 1),
+        ('Growth Strategist', 'Dallas', 'Contract', 2);
+      `);
+    }
+
+    console.log("Database schema migration: successfully ensured all columns and dynamic tables.");
   } catch (err) {
     console.error("Database schema init warning:", err);
   }
@@ -271,6 +414,127 @@ async function seedDatabase() {
       }
     }
 
+    // 11. Seed Stats
+    const statsCount = await db.select().from(companyStats);
+    if (statsCount.length === 0) {
+      console.log("Seeding default Company Stats...");
+      const defaultStats = [
+        { value: 30, suffix: "+", display: "", label: "Projects Delivered", sortOrder: 0 },
+        { value: 15, suffix: "+", display: "", label: "Clients Worked With", sortOrder: 1 },
+        { value: 6, suffix: "+", display: "", label: "Creative Capabilities", sortOrder: 2 },
+        { value: 0, suffix: "", display: "∞", label: "Ideas Turned Real", sortOrder: 3 },
+      ];
+      for (const s of defaultStats) {
+        await db.insert(companyStats).values(s);
+      }
+    }
+
+    // 12. Seed Testimonials
+    const testimonialsCount = await db.select().from(testimonials);
+    if (testimonialsCount.length === 0) {
+      console.log("Seeding default Testimonials...");
+      const defaultTestimonials = [
+        {
+          quote: "They rebuilt the site and the brand in the same pass, so nothing felt bolted on. First month after launch, enquiries doubled.",
+          authorName: "Kiran Gurung",
+          authorRole: "Founder, Vertex",
+          theme: "light",
+          sortOrder: 0
+        },
+        {
+          quote: "The build is stable and the handover was clean. Our own team picked it up in a week without a single call.",
+          authorName: "Sushma Bhandari",
+          authorRole: "Product Lead, Kinetic",
+          theme: "light",
+          sortOrder: 1
+        },
+        {
+          quote: "We came for a video and left with a whole system: identity, site, launch campaign. One team, one invoice, one standard.",
+          authorName: "Daniel Reyes",
+          authorRole: "CMO, Apex",
+          theme: "light",
+          sortOrder: 2
+        },
+        {
+          quote: "Timelines held. That is rarer than it should be, and it is why we are on the third project with them.",
+          authorName: "Priya Adhikari",
+          authorRole: "Director, Spectrum",
+          theme: "dark",
+          sortOrder: 3
+        }
+      ];
+      for (const t of defaultTestimonials) {
+        await db.insert(testimonials).values(t);
+      }
+    }
+
+    // 13. Seed Careers Metadata
+    const careersMetaCount = await db.select().from(careersMetadata);
+    if (careersMetaCount.length === 0) {
+      console.log("Seeding default Careers metadata...");
+      await db.insert(careersMetadata).values({
+        id: 1,
+        badge: "CAREERS",
+        title: "We are hiring",
+        description: "Send the project you are proudest of. If it is good we will find a seat for you, listed role or not."
+      });
+    }
+
+    // 14. Seed Careers Roles
+    const careersRolesCount = await db.select().from(careersRoles);
+    if (careersRolesCount.length === 0) {
+      console.log("Seeding default Careers roles...");
+      const defaultRoles = [
+        { title: "Frontend Engineer", location: "Lalitpur", type: "Full-time", sortOrder: 0 },
+        { title: "Motion Designer", location: "Hybrid", type: "Full-time", sortOrder: 1 },
+        { title: "Growth Strategist", location: "Dallas", type: "Contract", sortOrder: 2 }
+      ];
+      for (const r of defaultRoles) {
+        await db.insert(careersRoles).values(r);
+      }
+    }
+
+    // 15. Seed Contact Info
+    const contactCount = await db.select().from(contactInfo);
+    if (contactCount.length === 0) {
+      console.log("Seeding default Contact info...");
+      await db.insert(contactInfo).values({
+        id: 1,
+        headlineLine1: "Let's make",
+        headlineLine2: "the thing.",
+        description: "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.",
+        email: "abstraktcreation@gmail.com",
+        phone: "+977 9823901866"
+      });
+    }
+
+    // 16. Seed Contact Skills / CTA Pills
+    const contactSkillsCount = await db.select().from(contactSkills);
+    if (contactSkillsCount.length === 0) {
+      console.log("Seeding default Contact Skills pills...");
+      const defaultSkills = [
+        { label: "React", accent: true, sortOrder: 0 },
+        { label: "Next.js", accent: false, sortOrder: 1 },
+        { label: "Web Solutions", accent: true, sortOrder: 2 },
+        { label: "API Integration", accent: true, sortOrder: 3 },
+        { label: "Dashboards", accent: false, sortOrder: 4 },
+        { label: "3D & Animation", accent: false, sortOrder: 5 },
+        { label: "Social Media", accent: true, sortOrder: 6 },
+        { label: "Music Production", accent: true, sortOrder: 7 },
+        { label: "Video Production", accent: false, sortOrder: 8 },
+        { label: "Graphic Design", accent: true, sortOrder: 9 },
+        { label: "UI/UX Design", accent: true, sortOrder: 10 },
+        { label: "System Architecture", accent: false, sortOrder: 11 },
+        { label: "Digital Marketing", accent: false, sortOrder: 12 },
+        { label: "Creative", accent: false, sortOrder: 13 },
+        { label: "Motion Design", accent: true, sortOrder: 14 },
+        { label: "Brand Systems", accent: false, sortOrder: 15 }
+      ];
+      for (const s of defaultSkills) {
+        await db.insert(contactSkills).values(s);
+      }
+    }
+
     console.log("Database seed verification complete.");
   } catch (error) {
     console.error("Database seed failed. Make sure to run 'pnpm run db:push'.", error);
@@ -296,7 +560,13 @@ app.get('/api/content', async (req, res) => {
       processRows,
       peopleMetaRows,
       teamRows,
-      logoRows
+      logoRows,
+      statRows,
+      testimonialRows,
+      careersMetaRows,
+      careersRoleRows,
+      contactRows,
+      contactSkillRows
     ] = await Promise.all([
       db.select().from(hero),
       db.select().from(position),
@@ -307,7 +577,13 @@ app.get('/api/content', async (req, res) => {
       db.select().from(processSteps),
       db.select().from(peopleMetadata),
       db.select().from(teamMembers),
-      db.select().from(logos)
+      db.select().from(logos),
+      db.select().from(companyStats),
+      db.select().from(testimonials),
+      db.select().from(careersMetadata),
+      db.select().from(careersRoles),
+      db.select().from(contactInfo),
+      db.select().from(contactSkills)
     ]);
 
     // Format & sort arrays
@@ -457,6 +733,55 @@ app.get('/api/content', async (req, res) => {
         imageUrl: logo.imageUrl
       }));
 
+    const formattedStats = statRows
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(s => ({
+        id: s.id,
+        value: s.value,
+        suffix: s.suffix,
+        display: s.display || undefined,
+        label: s.label
+      }));
+
+    const formattedTestimonials = testimonialRows
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(t => ({
+        id: t.id,
+        quote: t.quote,
+        authorName: t.authorName,
+        authorRole: t.authorRole,
+        theme: (t.theme as "light" | "dark") || "light"
+      }));
+
+    const formattedCareers = {
+      badge: careersMetaRows[0]?.badge || "CAREERS",
+      title: careersMetaRows[0]?.title || "We are hiring",
+      description: careersMetaRows[0]?.description || "",
+      roles: careersRoleRows
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(r => ({
+          id: r.id,
+          title: r.title,
+          location: r.location,
+          type: r.type
+        }))
+    };
+
+    const formattedContact = {
+      headlineLine1: contactRows[0]?.headlineLine1 || "Let's make",
+      headlineLine2: contactRows[0]?.headlineLine2 || "the thing.",
+      description: contactRows[0]?.description || "Tell us what you are trying to launch and roughly when. You will get a scope and a number, not a deck.",
+      email: contactRows[0]?.email || "abstraktcreation@gmail.com",
+      phone: contactRows[0]?.phone || "+977 9823901866",
+      skills: (contactSkillRows || [])
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(s => ({
+          id: s.id,
+          label: s.label,
+          accent: Boolean(s.accent)
+        }))
+    };
+
     const responseData = {
       hero: formattedHero,
       position: formattedPosition,
@@ -465,7 +790,11 @@ app.get('/api/content', async (req, res) => {
       faq: formattedFaq,
       process: formattedProcess,
       people: formattedPeople,
-      logos: formattedLogos
+      logos: formattedLogos,
+      stats: formattedStats,
+      testimonials: formattedTestimonials,
+      careers: formattedCareers,
+      contact: formattedContact
     };
 
     cachedContentData = responseData;
@@ -571,6 +900,36 @@ app.post('/api/content/clear', async (req, res) => {
 
     // 10. Delete all Logos
     await db.delete(logos);
+
+    // 11. Delete all Stats
+    await db.delete(companyStats);
+
+    // 12. Delete all Testimonials
+    await db.delete(testimonials);
+
+    // 13. Clear Careers Metadata & Delete Roles
+    await db.update(careersMetadata)
+      .set({
+        badge: "",
+        title: "",
+        description: "",
+        updatedAt: new Date()
+      })
+      .where(eq(careersMetadata.id, 1));
+    await db.delete(careersRoles);
+
+    // 14. Clear Contact Info
+    await db.update(contactInfo)
+      .set({
+        headlineLine1: "",
+        headlineLine2: "",
+        description: "",
+        email: "",
+        phone: "",
+        updatedAt: new Date()
+      })
+      .where(eq(contactInfo.id, 1));
+    await db.delete(contactSkills);
 
     console.log("Database cleared successfully by admin.");
     cachedContentData = null;
@@ -776,6 +1135,94 @@ app.post('/api/content/:id', async (req, res) => {
           imageUrl: logo.imageUrl || "",
           sortOrder: i
         });
+      }
+    }
+    else if (id === 'stats') {
+      await db.delete(companyStats);
+      const statsList = Array.isArray(contentBody)
+        ? contentBody
+        : Array.isArray(contentBody.stats)
+        ? contentBody.stats
+        : [];
+      for (let i = 0; i < statsList.length; i++) {
+        const s = statsList[i];
+        await db.insert(companyStats).values({
+          value: typeof s.value === 'number' ? s.value : parseInt(s.value, 10) || 0,
+          suffix: s.suffix || "",
+          display: s.display || "",
+          label: s.label || "",
+          sortOrder: i
+        });
+      }
+    }
+    else if (id === 'testimonials') {
+      await db.delete(testimonials);
+      const testList = Array.isArray(contentBody)
+        ? contentBody
+        : Array.isArray(contentBody.testimonials)
+        ? contentBody.testimonials
+        : [];
+      for (let i = 0; i < testList.length; i++) {
+        const t = testList[i];
+        await db.insert(testimonials).values({
+          quote: t.quote || "",
+          authorName: t.authorName || "",
+          authorRole: t.authorRole || "",
+          theme: t.theme || "light",
+          sortOrder: i
+        });
+      }
+    }
+    else if (id === 'careers') {
+      const badge = contentBody.badge || "CAREERS";
+      const title = contentBody.title || "We are hiring";
+      const description = contentBody.description || "";
+
+      await db.update(careersMetadata)
+        .set({
+          badge,
+          title,
+          description,
+          updatedAt: new Date()
+        })
+        .where(eq(careersMetadata.id, 1));
+
+      await db.delete(careersRoles);
+      const rolesList = contentBody.roles || (Array.isArray(contentBody) ? contentBody : []);
+      for (let i = 0; i < rolesList.length; i++) {
+        const r = rolesList[i];
+        await db.insert(careersRoles).values({
+          title: r.title || "",
+          location: r.location || "",
+          type: r.type || "Full-time",
+          sortOrder: i
+        });
+      }
+    }
+    else if (id === 'contact') {
+      await db.update(contactInfo)
+        .set({
+          headlineLine1: contentBody.headlineLine1 || "",
+          headlineLine2: contentBody.headlineLine2 || "",
+          description: contentBody.description || "",
+          email: contentBody.email || "",
+          phone: contentBody.phone || "",
+          updatedAt: new Date()
+        })
+        .where(eq(contactInfo.id, 1));
+
+      if (Array.isArray(contentBody.skills)) {
+        await db.delete(contactSkills);
+        for (let i = 0; i < contentBody.skills.length; i++) {
+          const s = contentBody.skills[i];
+          if (s && s.label) {
+            await db.insert(contactSkills).values({
+              label: s.label,
+              accent: Boolean(s.accent),
+              sortOrder: i
+            });
+          }
+        }
       }
     } else {
       return res.status(400).json({ error: `Invalid section ID: '${id}'` });

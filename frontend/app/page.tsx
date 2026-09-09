@@ -14,6 +14,9 @@ import TrustedByV2 from "../components/v2/TrustedByV2";
 // for reuse on other projects. Uncomment to restore:
 // import CapabilitiesPetals from "../components/v2/CapabilitiesPetals";
 import CapabilitiesGridV2 from "../components/v2/CapabilitiesGridV2";
+// SeamBand removed from homepage 2026-09-07 — component kept in
+// components/v2/SeamBand.tsx. Uncomment to restore:
+// import SeamBand from "../components/v2/SeamBand";
 import WorksCarousel from "../components/v2/WorksCarousel";
 import SelectedWorkV2 from "../components/v2/SelectedWorkV2";
 import ProcessV2 from "../components/v2/ProcessV2";
@@ -29,7 +32,6 @@ import {
   WorksSkeleton,
   CapabilitiesSkeleton,
   LogosSkeleton,
-  ProcessSkeleton,
   StudioSkeleton,
   FaqSkeleton,
 } from "../components/ui/Skeleton";
@@ -185,8 +187,8 @@ export default function Home() {
           return <CapabilitiesSkeleton />;
         case "Our clients":
           return <LogosSkeleton />;
-        case "Our process":
-          return <ProcessSkeleton />;
+        // "Our process" no longer routes through gate() — the section renders
+        // only when it has content, so it has no loading or empty state here.
         case "Our team":
           return <StudioSkeleton />;
         case "Frequently asked questions":
@@ -241,6 +243,11 @@ export default function Home() {
               {gate(capabilities, <CapabilitiesPetals data={capabilities!} />, "Our capabilities")} */}
           {/* {gate(capabilities, <CapabilitiesPetals data={capabilities!} />, "Our capabilities")} */}
           {capabilities ? <CapabilitiesGridV2 data={capabilities} /> : null}
+          {/* REMOVED 2026-09-07: dot-texture seam band between the ink
+              capabilities grid and the cream client band. The ink → cream
+              handoff is a straight cut now. Component preserved in
+              components/v2/SeamBand.tsx. Restore with:
+              {capabilities ? <SeamBand from="#0E0E0E" to="#F7F6F3" tone="ink" /> : null} */}
           {/* Client marks and the numbers behind them are one proof block,
               banded off by hairline rules — the stats are rendered inside
               TrustedByV2 rather than as their own section. */}
@@ -249,7 +256,13 @@ export default function Home() {
             <TrustedByV2 data={logos!} stats={stats || statsContent} />,
             "Our clients"
           )}
-          {gate(process, <ProcessV2 data={process!} />, "Our process")}
+          {/* No SectionEmpty fallback here: with the CMS `process` table empty
+              the placeholder was the only thing this section rendered, and an
+              "isn't available right now" notice on a live page reads as a
+              fault rather than as absent content. Renders when there is
+              content to show, and is simply not in the page when there is
+              not. */}
+          {process ? <ProcessV2 data={process} /> : null}
           {gate(people, <StudioV2 data={people!} />, "Our team")}
           <TestimonialsV2 data={testimonials || testimonialsContent} />
           <CareersV2 data={careers || careersContent} hiringTeam={hiringTeam} />

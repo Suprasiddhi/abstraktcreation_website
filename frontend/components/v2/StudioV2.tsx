@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import PlaceholderSlot from "./PlaceholderSlot";
 import SectionHeading from "./SectionHeading";
-import { displayFont } from "./tokens";
+import { displayFont, LINE } from "./tokens";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -15,6 +16,13 @@ interface MemberData {
   name: string;
   role: string;
   description?: string;
+  /** Admin-cropped avatar; `originalAvatarUrl` is the pre-crop upload kept so
+   *  the cropper can be reopened. Either may be a base64 data URI rather than
+   *  a URL, which is why these render through a plain <img> — next/image has
+   *  nothing to optimise on a data URI and would need every CMS host allowed
+   *  in remotePatterns for the ones that are real URLs. */
+  avatarUrl?: string;
+  originalAvatarUrl?: string;
 }
 
 interface StudioV2Props {
@@ -66,7 +74,13 @@ export default function StudioV2({ data }: StudioV2Props) {
   if (team.length === 0) return null;
 
   return (
-    <section ref={sectionRef} id="studio" data-reveal="1" data-depth="1" data-screen-label="People" style={{ position: "relative", padding: "clamp(60px,9vh,110px) 0", background: "#EAE9E4", scrollMarginTop: 80, overflow: "hidden" }}>
+    // Ground matches the page cream (--ab-bg) rather than the darker #EAE9E4
+    // stone it used to be: the testimonials section directly below has no
+    // background of its own, so the mismatch showed as a hard grey-to-white
+    // step across the full width. data-depth is "flat" for the same reason —
+    // the lift shadow only reads on a genuine ground change, and on a
+    // same-colour handoff it just smudges the seam.
+    <section ref={sectionRef} id="studio" data-reveal="1" data-depth="flat" data-screen-label="People" style={{ position: "relative", padding: "clamp(60px,9vh,110px) 0", background: "#F7F6F3", scrollMarginTop: 80, overflow: "hidden" }}>
       <div data-depth-inner="1" style={{ position: "relative", maxWidth: 1680, margin: "0 auto", padding: "0 clamp(18px,3.6vw,60px)" }}>
         <div
           style={{
@@ -76,7 +90,10 @@ export default function StudioV2({ data }: StudioV2Props) {
             justifyContent: "space-between",
             gap: 20,
             paddingBottom: "clamp(24px,4vh,44px)",
-            borderBottom: "1px solid #D6D5CF",
+            // The shared hairline token, not the #D6D5CF that was picked to
+            // read against the old darker stone ground — on cream that reads
+            // heavier than every other divider on the page.
+            borderBottom: `1px solid ${LINE}`,
             marginBottom: "clamp(28px,4.5vh,52px)",
           }}
         >
@@ -97,6 +114,37 @@ export default function StudioV2({ data }: StudioV2Props) {
             </div>
           ))}
         </div>
+
+        {/* Through to the full roster. Sits below the grid rather than up in
+            the header row: the cards here are a preview, so the invitation to
+            see everyone reads as the step after them. Not wrapped in
+            [data-rv] — the GSAP timeline above animates [data-studio-card]
+            from a scroll-scrubbed offset, and a reveal transition on a
+            sibling of that would fire on a different clock. */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "clamp(28px,4.5vh,52px)" }}>
+          <Link
+            className="ab-btn ab-btn--ink"
+            href="/team"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              height: 56,
+              padding: "0 30px",
+              borderRadius: 999,
+              background: "#0E0E0E",
+              color: "#F7F6F3",
+              fontSize: 16,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            {/* Label and glyph each in their own span: .ab-btn lifts only
+                direct children above the fill pseudo-element. */}
+            <span>Meet the whole team</span>
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -106,10 +154,37 @@ export function PersonCard({ member, compact = false }: { member: MemberData; co
   const pad = compact ? 20 : 24;
   const btnSize = compact ? 46 : 54;
   const iconSize = compact ? 14 : 16;
+  // Cropped avatar first, raw upload as the fallback — same precedence the
+  // team page uses, so a member shows the same photo in both places.
+  const imgSrc = member.avatarUrl || member.originalAvatarUrl;
 
   return (
     <div data-person="1" style={{ position: "relative", aspectRatio: "3/4", borderRadius: compact ? 18 : 20, overflow: "hidden", background: "#2A0E70" }}>
-      <PlaceholderSlot label={member.name} tone="purple" />
+      {imgSrc ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imgSrc}
+            alt={member.name}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          {/* The name/role label and the + button are white on whatever the
+              photo happens to be. This scrim keeps the bottom third dark
+              enough for both to hold contrast over a light or busy image —
+              the flat purple placeholder never needed one. */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(to top,rgba(14,14,14,.72) 0%,rgba(14,14,14,.28) 34%,transparent 62%)",
+              pointerEvents: "none",
+            }}
+          />
+        </>
+      ) : (
+        <PlaceholderSlot label={member.name} tone="purple" />
+      )}
       <div
         data-circle="1"
         style={{

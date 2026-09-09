@@ -225,6 +225,9 @@ export default function SkillsPhysics({ skills }: SkillsPhysicsProps = {}) {
      *  is decoration, and this is the one case where the decoration is
      *  actively unwelcome. */
     if (reduced) {
+      // Pills are placed immediately here, so the box has content from the
+      // first paint and gets its ground straight away.
+      box.classList.add("ab-skills-box--live");
       let cx = 16;
       let cy = 26;
       const { w } = sizeRef.current;
@@ -377,7 +380,11 @@ export default function SkillsPhysics({ skills }: SkillsPhysicsProps = {}) {
       const f = frameRef.current;
 
       for (const b of bodies) {
-        if (!b.live && f >= b.dropAt) b.live = true;
+        if (!b.live && f >= b.dropAt) {
+          b.live = true;
+          // First body in: the box now has content, so give it its ground.
+          box.classList.add("ab-skills-box--live");
+        }
         if (!b.live || b.held) continue;
         b.vy += GRAVITY * DT;
         b.vx -= b.vx * LINEAR_DAMPING * DT;
@@ -556,8 +563,16 @@ export default function SkillsPhysics({ skills }: SkillsPhysicsProps = {}) {
         position: "relative",
         overflow: "hidden",
         borderRadius: 18,
-        border: "1px solid #242424",
-        background: "#111111",
+        // Border and ground fade in with the first pills. Empty, the box was
+        // a bare #111 card with a hairline edge sitting on the near-identical
+        // #0E0E0E section ground — and because the simulation only runs while
+        // the box is on screen, that empty state is exactly what a reader saw
+        // scrolling in, or scrolling past to the buttons in the taller column
+        // beside it. Driven by .ab-skills-box--live, set once the first body
+        // goes live, so nothing shows until there is something to hold.
+        border: "1px solid transparent",
+        background: "transparent",
+        transition: "background 0.5s ease, border-color 0.5s ease",
         height: "clamp(320px,42vw,470px)",
         touchAction: "pan-y",
       }}

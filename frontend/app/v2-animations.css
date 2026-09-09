@@ -807,23 +807,25 @@
    Below this width a split leaves the headline a few characters
    wide, so the two stack and the playground leads.
    --------------------------------------------------------------- */
-/* Clears the "Project in mind?" eyebrow above the playground, so the two
-   columns start level with each other rather than with the label. Declared
-   before the media query below so the stacked override wins on source order
-   rather than on an !important. */
-.ab-contact-ask {
-  padding-top: 46px;
-}
+/* The columns are centre-aligned against each other now (see ContactV2), so
+   the ask needs no top offset: the 46px that used to level the headline with
+   the physics box under `align-items: start` would push it off centre. */
 
 @media (max-width: 900px) {
   .ab-contact-split {
     grid-template-columns: minmax(0, 1fr) !important;
   }
-  /* Stacked, there is no second column to align against — the offset that
-     levels the headline with the physics box would just be a stray gap. */
-  .ab-contact-ask {
-    padding-top: 0;
-  }
+}
+
+/* The playground only draws its own box once it holds something. Empty, a
+   #111 card with a #242424 hairline on the #0E0E0E contact ground read as a
+   stray rounded rectangle rather than a container — and since the simulation
+   is paused while off-screen, empty is the state a reader met on the way in.
+   Paired with .ab-skills-box--live, added from SkillsPhysics as the first
+   body drops. */
+.ab-skills-box--live {
+  border-color: #242424 !important;
+  background: #111111 !important;
 }
 
 /* Grabbing a pill should read as grabbing it. */
@@ -890,9 +892,14 @@
 }
 
 /* Solid brand pill: the fill wipes to cream and the label flips to ink,
-   so the button inverts rather than merely tinting. */
+   so the button inverts rather than merely tinting.
+   The resting brand ground and white label belong here rather than on the
+   element — set inline they outrank the :hover rule below, which left the
+   label white on the cream fill and so unreadable while hovered. */
 .ab-btn--solid {
   --btn-fill: #f7f6f3;
+  background: #501ebd;
+  color: #ffffff;
 }
 .ab-btn--solid:hover,
 .ab-btn--solid:focus-visible {
@@ -913,14 +920,32 @@
 }
 
 /* Light pill on the carousel's dark backdrop. Fills with brand and the
-   label — text and arrow both, via currentColor — goes to white. */
+   label — text and arrow both, via currentColor — goes to white.
+   The resting ground/ink come from --btn-rest-bg / --btn-rest-ink, set per
+   theme on the element. Applied as real inline background/color they would
+   outrank the :hover below and the label would never invert. */
 .ab-btn--invert {
   --btn-fill: #501ebd;
+  background: var(--btn-rest-bg, #f7f6f3);
+  color: var(--btn-rest-ink, #0e0e0e);
 }
 .ab-btn--invert:hover,
 .ab-btn--invert:focus-visible {
   color: #ffffff;
   box-shadow: 0 14px 28px rgba(80, 30, 189, 0.34);
+}
+
+/* Ink pill on a cream/stone ground — the studio band. The other three
+   variants all assume a dark field behind them; this one fills from ink to
+   brand so the wipe still reads against #EAE9E4. Label stays white through
+   the transition, so only the ground moves. */
+.ab-btn--ink {
+  --btn-fill: #501ebd;
+}
+.ab-btn--ink:hover,
+.ab-btn--ink:focus-visible {
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(80, 30, 189, 0.26);
 }
 
 /* Reduced motion: keep the colour change, drop the wipe and the lift.
@@ -941,5 +966,84 @@
   .ab-btn:focus-visible,
   .ab-btn:active {
     transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Seam band — halftone dot field between two section grounds
+
+   Sits at a hard ground change (ink section into cream section) so
+   the two meet through a texture rather than on a cut line. Built
+   from a repeating radial-gradient rather than the 1.5MB PNG the
+   pattern was mocked up as: the dots stay crisp at any width, cost
+   no bytes, and can be recoloured per side from one declaration.
+
+   Two dot layers at different sizes and offsets keep the field from
+   reading as a regular grid — the coarse layer carries the texture,
+   the fine layer fills between so it does not moire against the
+   screen at small sizes.
+   --------------------------------------------------------------- */
+.ab-seam {
+  --seam-dot: #501ebd;
+  --seam-ground: #f7f6f3;
+  position: relative;
+  height: clamp(110px, 15vh, 190px);
+  background-color: var(--seam-ground);
+  background-image:
+    radial-gradient(circle, var(--seam-dot) 1.1px, transparent 1.2px),
+    radial-gradient(circle, var(--seam-dot) 0.7px, transparent 0.8px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+  /* The band has to vanish into whatever sits above and below it, so the
+     dots are masked out at both edges. Without this the texture would end
+     on two new cut lines and simply move the problem. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 38%,
+    #000 62%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 38%,
+    #000 62%,
+    transparent
+  );
+}
+
+/* Dark side: the same field inverted, for a seam that runs into an ink
+   ground instead of the cream one. */
+.ab-seam--ink {
+  --seam-dot: #9a78f5;
+  --seam-ground: #0e0e0e;
+}
+
+/* A seam bridges two grounds, so it is painted in both: the band's own
+   ground fades from the section above to the section below behind the
+   dots, and the dot mask above hides the join. */
+.ab-seam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--seam-from, transparent),
+    transparent 45%,
+    transparent 55%,
+    var(--seam-to, transparent)
+  );
+  pointer-events: none;
+}
+
+/* The dot field is decoration with no reading order, and at this scale a
+   dense point grid is exactly the kind of high-frequency texture that
+   triggers discomfort for some visitors. Reduced motion is the closest
+   standard signal for "show me less", so the texture drops to a plain
+   ground and only the two-tone bridge remains. */
+@media (prefers-reduced-motion: reduce) {
+  .ab-seam {
+    background-image: none;
   }
 }

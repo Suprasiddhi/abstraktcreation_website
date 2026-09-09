@@ -563,8 +563,14 @@ export default function WorksCarousel({ data }: WorksCarouselProps) {
               gap: 9,
               padding: "11px 18px",
               borderRadius: 999,
-              background: T.btnBg,
-              color: T.btnInk,
+              // Handed to the stylesheet as custom properties rather than as
+              // `background`/`color` directly: an inline colour outranks
+              // .ab-btn--invert:hover, which would pin the label to its
+              // resting ink and leave it unreadable once the brand fill wipes
+              // across. The variant reads these for the resting state and is
+              // then free to override the hover.
+              ["--btn-rest-bg" as string]: T.btnBg,
+              ["--btn-rest-ink" as string]: T.btnInk,
               fontSize: 13,
               fontWeight: 600,
               letterSpacing: ".01em",

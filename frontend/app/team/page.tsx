@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
+import { useAbstraktMotion } from "../../lib/v2/useAbstraktMotion";
+import { useLenis, getLenis } from "../../lib/v2/useLenis";
+import { useSectionReveal } from "../../lib/v2/useSectionReveal";
+import CustomCursor from "../../components/v2/CustomCursor";
+import NavV2 from "../../components/v2/NavV2";
+import ScrollProgressV2 from "../../components/v2/ScrollProgressV2";
+import FooterV2 from "../../components/v2/FooterV2";
 import { TeamGridSkeleton } from "../../components/ui/Skeleton";
 
 interface SocialItem {
@@ -54,11 +59,19 @@ function SocialIcon({ platform }: { platform: string }) {
 }
 
 export default function TeamPage() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Lenis owns the scroll position and eases it back every frame, so a bare
+    // window.scrollTo is reverted before it lands. scrollTo on the instance is
+    // what actually sticks; the plain call is the fallback for the first paint,
+    // before the hook below has mounted.
+    const lenis = getLenis();
+    if (lenis) lenis.scrollTo(0, { immediate: true, force: true });
+    else window.scrollTo(0, 0);
+
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
     // 1. Instant render from client sessionStorage cache
@@ -93,6 +106,15 @@ export default function TeamPage() {
       });
   }, []);
 
+  // Same shell behaviour as the homepage: Lenis smooth scroll, the shared
+  // motion pass (nav tone, magnetic hovers, scroll-linked effects) and the
+  // section reveal choreography. `team` is a dep on the latter two because the
+  // cards arrive after the fetch — the observers have to re-scan once the grid
+  // they animate actually exists in the DOM.
+  useLenis();
+  useAbstraktMotion(rootRef, [team]);
+  useSectionReveal(rootRef, [team]);
+
   const defaultAvatar = (
     <svg
       className="w-24 h-24 text-neutral-600 group-hover:text-brand transition-colors duration-500"
@@ -107,16 +129,42 @@ export default function TeamPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-brand/20 selection:text-brand">
-      {/* Global Navigation Header */}
-      <Header />
+    // Same token block and dark-footer canvas flag as the homepage, so the
+    // shared v2 chrome (nav, cursor, footer) resolves the same brand colours
+    // here instead of falling back to the v1 theme.
+    <div
+      className="ab-page-dark-end"
+      style={{
+        "--ab-bg": "#F7F6F3",
+        "--ab-ink": "#0E0E0E",
+        "--ab-brand": "#501EBD",
+        "--ab-brand-light": "#9A78F5",
+        "--ab-card": "#EAE9E4",
+        "--ab-ink-deep": "#100A1E",
+        fontFamily: "var(--font-manrope), system-ui, sans-serif",
+        background: "var(--ab-bg)",
+        color: "var(--ab-ink)",
+      } as React.CSSProperties}
+    >
+      <div ref={rootRef} style={{ width: "100%", overflowX: "clip" }}>
+        <CustomCursor />
+        <ScrollProgressV2 />
+        <NavV2 />
 
-      <main className="flex-1 py-16 md:py-24 px-6 md:px-12">
+        {/* No data-nav-tone: the page runs on the cream ground, which is the
+            nav's unmarked default. Top padding clears the fixed bar. */}
+        <main
+          id="top"
+          data-screen-label="Team"
+          className="py-16 md:py-24 px-6 md:px-12"
+          style={{ width: "100%", overflow: "clip", paddingTop: "clamp(120px,16vh,190px)" }}
+        >
         <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-12 md:gap-16">
           
           {/* Back Button & Hero Section Title */}
-          <div className="flex flex-col gap-6 border-b border-neutral-200/80 pb-12">
+          <div data-reveal="1" className="flex flex-col gap-6 border-b border-neutral-200/80 pb-12">
             <Link
+              data-rv="eyebrow"
               href="/#studio"
               className="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-neutral-500 hover:text-brand transition-colors uppercase w-fit group"
             >
@@ -125,15 +173,25 @@ export default function TeamPage() {
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
+                {/* Masked line-rise, same as the homepage headlines: the outer
+                    [data-rv="line"] clips and the inner span travels. */}
                 <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight uppercase leading-none text-foreground">
-                  THE <span className="text-brand font-black">TEAM</span>
+                  <span data-rv="line" style={{ ["--rv-i" as string]: 1 }}>
+                    <span>
+                      THE <span className="text-brand font-black">TEAM</span>
+                    </span>
+                  </span>
                 </h1>
-                <p className="text-sm md:text-base text-neutral-500 max-w-xl mt-4 font-sans font-normal leading-relaxed">
+                <p
+                  data-rv="up"
+                  style={{ ["--rv-i" as string]: 3 }}
+                  className="text-sm md:text-base text-neutral-500 max-w-xl mt-4 font-sans font-normal leading-relaxed"
+                >
                   A collective of visionaries, engineers, and artists dedicated to redefining the digital landscape through innovation and design.
                 </p>
               </div>
 
-              <div className="hidden md:flex items-center gap-2">
+              <div data-rv="up" style={{ ["--rv-i" as string]: 4 }} className="hidden md:flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand animate-pulse" />
               </div>
             </div>
@@ -144,7 +202,7 @@ export default function TeamPage() {
             <TeamGridSkeleton count={6} />
           ) : team.length > 0 ? (
             /* Team Grid (3 columns matching user screenshot layout) */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+            <div data-reveal="1" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
               {team.map((member, idx) => {
                 const displayNum = String(idx + 1).padStart(2, "0");
                 const imgSrc = member.avatarUrl || member.originalAvatarUrl;
@@ -157,7 +215,15 @@ export default function TeamPage() {
                   : [];
 
                 return (
-                  <div key={idx} className="flex flex-col group">
+                  <div
+                    key={idx}
+                    data-rv="up"
+                    // Stagger across the row, then restart — an uncapped index
+                    // would leave the last card of a long list waiting well
+                    // over a second after the first.
+                    style={{ ["--rv-i" as string]: idx % 3 }}
+                    className="flex flex-col group"
+                  >
                     {/* Member Image Card Container (Aspect Ratio ~4:5 / Square with Greyscale hover effect) */}
                     <div className="w-full aspect-[4/5] sm:aspect-square md:aspect-[4/5] rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center relative overflow-hidden transition-all duration-700 hover:border-brand/40 shadow-md mb-6">
                       <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-all duration-500 z-10 pointer-events-none" />
@@ -225,10 +291,10 @@ export default function TeamPage() {
           )}
 
         </div>
-      </main>
+        </main>
 
-      {/* Global Footer */}
-      <Footer />
+        <FooterV2 />
+      </div>
     </div>
   );
 }

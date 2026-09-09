@@ -43,12 +43,16 @@ export default function ContactV2({ data }: ContactV2Props) {
         {/* Playground left, the whole ask right. Collapses to one column below
             the breakpoint in v2-animations.css, where a split would leave the
             headline about six characters wide.
-            `start` rather than `center`: the right column is now the taller of
-            the two, and centring made the playground float against the
-            headline's midpoint with uneven space above and below it. */}
+
+            `center` rather than `start`: the right column is the taller of the
+            two, so aligning to the top left the playground's lower half — and
+            once scrolled, its empty top edge — sitting beside the buttons with
+            a long dead gap under it. Centred, the pile stays level with the
+            ask no matter which column wins on height. The eyebrow-clearing
+            offset that `start` needed is gone with it. */}
         <div
           className="ab-contact-split"
-          style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px,4vw,64px)", alignItems: "start" }}
+          style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px,4vw,64px)", alignItems: "center" }}
         >
           <div data-rv="up">
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -63,7 +67,18 @@ export default function ContactV2({ data }: ContactV2Props) {
             </p>
           </div>
 
-          <div className="ab-contact-ask">
+          {/* The headline, the line under it and the two contact buttons are
+              one column now. They used to be split: headline here, standfirst
+              and buttons in a full-width row beneath the playground — which
+              left the ask stranded a screen-width away from the sentence that
+              set it up, and stretched a 44ch paragraph across the full 1680px
+              container.
+
+              The headline is no longer itself a mailto link. It sat inside an
+              <a>, and the buttons cannot be nested inside another anchor
+              without producing invalid markup; the email button directly below
+              is the same destination, so nothing is lost. */}
+          <div>
             <h2
               style={{ margin: 0, fontFamily: displayFont, fontWeight: 700, fontSize: "clamp(40px,6.4vw,116px)", lineHeight: 0.9, letterSpacing: "-.045em", color: "#F7F6F3" }}
             >
@@ -93,10 +108,18 @@ export default function ContactV2({ data }: ContactV2Props) {
               data-rv="up"
               style={{ ["--rv-i" as string]: 5, display: "flex", flexWrap: "wrap", gap: 10, marginTop: "clamp(22px,3.2vh,32px)" }}
             >
+              {/* The label is wrapped in its own span: .ab-btn lifts every
+                  direct child above the fill pseudo-element, and a bare text
+                  node cannot be raised that way — it would be painted over as
+                  the fill wipes across. */}
+              {/* Ground and label colour live in .ab-btn--solid, NOT here:
+                  an inline `color` outranks any stylesheet rule, so the
+                  hover state's flip to ink never applied and the label stayed
+                  white on the cream fill — invisible on hover. */}
               <a
                 className="ab-btn ab-btn--solid"
                 href={`mailto:${email}`}
-                style={{ display: "inline-flex", alignItems: "center", height: 56, padding: "0 30px", borderRadius: 999, background: "#501EBD", color: "#ffffff", fontSize: 16, fontWeight: 600 }}
+                style={{ display: "inline-flex", alignItems: "center", height: 56, padding: "0 30px", borderRadius: 999, fontSize: 16, fontWeight: 600 }}
               >
                 <span>{email}</span>
               </a>
